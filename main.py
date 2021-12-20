@@ -29,7 +29,7 @@ FPS = 60
 # Game Variables: #
 
 gameRunning = True
-tileSize = 50
+tileSize = screenHeight // 20
 
 # Game Classes: #
 
@@ -70,18 +70,20 @@ class Player():
 		self.direction = 0
 		for c in range(3):
 			moveAnimation = pygame.image.load(f'assets/Player/Move/{c}.png')
-			moveAnimation = pygame.transform.scale(moveAnimation, ((128, 128)))
+			moveAnimation = pygame.transform.scale(moveAnimation, ((64, 64)))
 			self.animationMove.append(moveAnimation)
 
 			idleAnimation = pygame.image.load(f'assets/Player/Idle/{c}.png')
-			idleAnimation = pygame.transform.scale(idleAnimation, ((128, 128)))
+			idleAnimation = pygame.transform.scale(idleAnimation, ((64, 64)))
 			self.animationIdle.append(idleAnimation)
 
 		sprite = self.animationIdle[0]
-		self.image = pygame.transform.scale(sprite, (128, 128))
+		self.image = pygame.transform.scale(sprite, (64, 64))
 		self.rect = self.image.get_rect()
 		self.rect.x = x
 		self.rect.y = y
+		self.width = self.image.get_width()
+		self.height = self.image.get_height()
 		self.velocityY = 0
 		self.alreadyJumped = False
 
@@ -124,6 +126,21 @@ class Player():
 				self.image = self.animationMove[self.index]
 				self.image = pygame.transform.flip(self.image, self.direction, False)
 
+		# Collision (To be improved):
+		for tile in world.tileList:
+			if(tile[1].colliderect(self.rect.x + deltaX, self.rect.y, self.width - 20, self.height)):
+				deltaX = 0
+
+		for tile in world.tileList:
+			if(tile[1].colliderect(self.rect.x, self.rect.y + deltaY, self.width - 20, self.height)):
+				if(self.velocityY < 0):
+					deltaY = tile[1].bottom - self.rect.top
+					self.velocityY = 0
+
+				elif(self.velocityY >= 0):
+					deltaY = tile[1].top - self.rect.bottom
+					self.velocityY = 0
+
 		# Gravity: 
 		self.velocityY += 1
 		if(self.velocityY > 10):
@@ -131,11 +148,6 @@ class Player():
 
 		self.rect.x += deltaX
 		self.rect.y += deltaY
-
-		# Temporary Surface Limit: 
-		if(self.rect.bottom > 950):
-			self.rect.bottom = 950
-			deltaY = 0
 
 		# Draw Player:
 		gameWindow.blit(self.image, self.rect)
@@ -160,9 +172,9 @@ worldData = [ # Test Level:
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
 
