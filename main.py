@@ -38,7 +38,10 @@ class World():
 	def __init__(self, data):
 		self.tileList = []
 		# Load Tile:
+		grassTile = pygame.image.load('assets/Tiles/grass.png')
 		dirtTile = pygame.image.load('assets/Tiles/dirt.png')
+		badDirtTile = pygame.image.load('assets/Tiles/bad_dirt.png')
+		sandTile = pygame.image.load('assets/Tiles/sand.png')
 
 		# Select Tile:
 		rowCount = 0
