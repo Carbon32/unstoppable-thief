@@ -63,8 +63,22 @@ class World():
 
 class Player():
 	def __init__(self, x, y):
-		sprite = pygame.image.load("assets/Tiles/grass.png")
-		self.image = pygame.transform.scale(sprite, (40, 90))
+		self.animationMove = []
+		self.animationIdle = []
+		self.index = 0
+		self.animCounter = 0
+		self.direction = 0
+		for c in range(3):
+			moveAnimation = pygame.image.load(f'assets/Player/Move/{c}.png')
+			moveAnimation = pygame.transform.scale(moveAnimation, ((128, 128)))
+			self.animationMove.append(moveAnimation)
+
+			idleAnimation = pygame.image.load(f'assets/Player/Idle/{c}.png')
+			idleAnimation = pygame.transform.scale(idleAnimation, ((128, 128)))
+			self.animationIdle.append(idleAnimation)
+
+		sprite = self.animationIdle[0]
+		self.image = pygame.transform.scale(sprite, (128, 128))
 		self.rect = self.image.get_rect()
 		self.rect.x = x
 		self.rect.y = y
@@ -77,14 +91,38 @@ class Player():
 		deltaY = 0
 		if(pygame.key.get_pressed()[pygame.K_q]):
 			deltaX -= 5
+			self.direction = 1
 		if(pygame.key.get_pressed()[pygame.K_d]):
 			deltaX += 5
+			self.direction = 0
 		if(pygame.key.get_pressed()[pygame.K_SPACE] and self.alreadyJumped == False):
 			self.velocityY = -20
 			self.alreadyJumped = True
 		if(pygame.key.get_pressed()[pygame.K_SPACE] == False):
 			self.alreadyJumped = False
 		deltaY += self.velocityY
+
+
+		# Handle Animation:
+		coolDown = 5
+		if(deltaX == 0):
+			self.animCounter += 1
+			if(self.animCounter > coolDown):
+				self.animCounter = 0
+				self.index += 1
+				if(self.index >= len(self.animationIdle)):
+					self.index = 0
+				self.image = self.animationIdle[self.index]
+				self.image = pygame.transform.flip(self.image, self.direction, False)
+		else:
+			self.animCounter += 1
+			if(self.animCounter > coolDown):
+				self.animCounter = 0
+				self.index += 1
+				if(self.index >= len(self.animationMove)):
+					self.index = 0
+				self.image = self.animationMove[self.index]
+				self.image = pygame.transform.flip(self.image, self.direction, False)
 
 		# Gravity: 
 		self.velocityY += 1
