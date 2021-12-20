@@ -15,8 +15,7 @@ pygame.init()
 
 # Game Window: #
 
-screenWidth = 1000
-screenHeight = 1000
+screenWidth, screenHeight = 1000, 1000
 
 gameWindow = pygame.display.set_mode((screenWidth, screenHeight))
 pygame.display.set_caption("Unstoppable Thief: ")
@@ -47,8 +46,29 @@ class World():
 		for row in data:
 			columnCount = 0 
 			for tile in row:
-				if tile == 1:
+				if(tile == 1): # Dirt: 
 					image = pygame.transform.scale(dirtTile, (tileSize, tileSize))
+					imageRect = image.get_rect()
+					imageRect.x = columnCount * tileSize
+					imageRect.y = rowCount * tileSize
+					tile = (image, imageRect)
+					self.tileList.append(tile)
+				if(tile == 2): # Grass:
+					image = pygame.transform.scale(grassTile, (tileSize, tileSize))
+					imageRect = image.get_rect()
+					imageRect.x = columnCount * tileSize
+					imageRect.y = rowCount * tileSize
+					tile = (image, imageRect)
+					self.tileList.append(tile)
+				if(tile == 3): # Bad Dirt:
+					image = pygame.transform.scale(badDirtTile, (tileSize, tileSize))
+					imageRect = image.get_rect()
+					imageRect.x = columnCount * tileSize
+					imageRect.y = rowCount * tileSize
+					tile = (image, imageRect)
+					self.tileList.append(tile)
+				if(tile == 4): # Sand: 
+					image = pygame.transform.scale(sandTile, (tileSize, tileSize))
 					imageRect = image.get_rect()
 					imageRect.x = columnCount * tileSize
 					imageRect.y = rowCount * tileSize
@@ -56,6 +76,7 @@ class World():
 					self.tileList.append(tile)
 				columnCount += 1
 			rowCount += 1
+
 
 	def draw(self):
 		for tile in self.tileList:
@@ -82,8 +103,6 @@ class Player():
 		self.rect = self.image.get_rect()
 		self.rect.x = x
 		self.rect.y = y
-		self.width = self.image.get_width()
-		self.height = self.image.get_height()
 		self.velocityY = 0
 		self.alreadyJumped = False
 
@@ -98,7 +117,7 @@ class Player():
 			deltaX += 5
 			self.direction = 0
 		if(pygame.key.get_pressed()[pygame.K_SPACE] and self.alreadyJumped == False):
-			self.velocityY = -20
+			self.velocityY = -10
 			self.alreadyJumped = True
 		if(pygame.key.get_pressed()[pygame.K_SPACE] == False):
 			self.alreadyJumped = False
@@ -128,11 +147,11 @@ class Player():
 
 		# Collision (To be improved):
 		for tile in world.tileList:
-			if(tile[1].colliderect(self.rect.x + deltaX, self.rect.y, self.width - 20, self.height)):
+			if(tile[1].colliderect(self.rect.x + deltaX, self.rect.y, self.rect.width - 20, self.rect.height)):
 				deltaX = 0
 
 		for tile in world.tileList:
-			if(tile[1].colliderect(self.rect.x, self.rect.y + deltaY, self.width - 20, self.height)):
+			if(tile[1].colliderect(self.rect.x, self.rect.y + deltaY, self.rect.width - 20, self.rect.height)):
 				if(self.velocityY < 0):
 					deltaY = tile[1].bottom - self.rect.top
 					self.velocityY = 0
@@ -165,12 +184,12 @@ worldData = [ # Test Level:
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
