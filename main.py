@@ -20,7 +20,6 @@ screenHeight = 1000
 
 gameWindow = pygame.display.set_mode((screenWidth, screenHeight))
 pygame.display.set_caption("Unstoppable Thief: ")
-gameWindow.fill((100, 123, 255))
 
 # Frame Limiter: #
 
@@ -62,6 +61,47 @@ class World():
 		for tile in self.tileList:
 			gameWindow.blit(tile[0], tile[1])
 
+class Player():
+	def __init__(self, x, y):
+		sprite = pygame.image.load("assets/Tiles/grass.png")
+		self.image = pygame.transform.scale(sprite, (40, 90))
+		self.rect = self.image.get_rect()
+		self.rect.x = x
+		self.rect.y = y
+		self.velocityY = 0
+		self.alreadyJumped = False
+
+	def update(self):
+		# Movement:
+		deltaX = 0
+		deltaY = 0
+		if(pygame.key.get_pressed()[pygame.K_q]):
+			deltaX -= 5
+		if(pygame.key.get_pressed()[pygame.K_d]):
+			deltaX += 5
+		if(pygame.key.get_pressed()[pygame.K_SPACE] and self.alreadyJumped == False):
+			self.velocityY = -20
+			self.alreadyJumped = True
+		if(pygame.key.get_pressed()[pygame.K_SPACE] == False):
+			self.alreadyJumped = False
+		deltaY += self.velocityY
+
+		# Gravity: 
+		self.velocityY += 1
+		if(self.velocityY > 10):
+			self.velocityY = 10
+
+		self.rect.x += deltaX
+		self.rect.y += deltaY
+
+		# Temporary Surface Limit: 
+		if(self.rect.bottom > 950):
+			self.rect.bottom = 950
+			deltaY = 0
+
+		# Draw Player:
+		gameWindow.blit(self.image, self.rect)
+
 
 # Game Mechanics: #
 
@@ -88,17 +128,22 @@ worldData = [ # Test Level:
 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
 
-
 world = World(worldData)
+player = Player(100, 830)
 
 # Game Loop: #
 
 while(gameRunning):
+	# Game Background: 
+	gameWindow.fill((100, 123, 255))
+
 	# FPS Handler: 
 	handleFPS.tick(FPS)
 
 	# Handle Game Mechanics:
 	world.draw()
+	player.update()
+
 
 	# Event Handler: 
 	for event in pygame.event.get():
