@@ -28,7 +28,7 @@ FPS = 60
 # Game Variables: #
 
 gameRunning = True
-tileSize = screenHeight // 20
+tileSize = screenHeight // 15
 
 # Game Classes: #
 
@@ -74,6 +74,9 @@ class World():
 					imageRect.y = rowCount * tileSize
 					tile = (image, imageRect)
 					self.tileList.append(tile)
+				if(tile == 5): # Enemy: 
+					enemy = Enemy(columnCount * tileSize, rowCount * tileSize + 34) 
+					enemies.add(enemy)
 				columnCount += 1
 			rowCount += 1
 
@@ -117,7 +120,7 @@ class Player():
 			deltaX += 5
 			self.direction = 0
 		if(pygame.key.get_pressed()[pygame.K_SPACE] and self.alreadyJumped == False):
-			self.velocityY = -10
+			self.velocityY = -15
 			self.alreadyJumped = True
 		if(pygame.key.get_pressed()[pygame.K_SPACE] == False):
 			self.alreadyJumped = False
@@ -162,8 +165,8 @@ class Player():
 
 		# Gravity: 
 		self.velocityY += 1
-		if(self.velocityY > 10):
-			self.velocityY = 10
+		if(self.velocityY > 20):
+			self.velocityY = 20
 
 		self.rect.x += deltaX
 		self.rect.y += deltaY
@@ -171,32 +174,47 @@ class Player():
 		# Draw Player:
 		gameWindow.blit(self.image, self.rect)
 
+class Enemy(pygame.sprite.Sprite):
+	def __init__(self, x, y):
+		pygame.sprite.Sprite.__init__(self)
+		self.image = pygame.image.load('assets/Tiles/grass.png')
+		self.rect = self.image.get_rect()
+		self.rect.x = x
+		self.rect.y = y
+		self.movementDirection = 1
+		self.movementCounter = 0
+
+	def update(self):
+		self.rect.x += self.movementDirection
+		self.movementCounter += 1
+		if abs((self.movementCounter > 50)):
+			self.movementDirection *= -1
+			self.movementCounter *= -1
 
 # Game Mechanics: #
 
 worldData = [ # Test Level: 
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
 
+# Groups:
+enemies = pygame.sprite.Group()
+
+# Instances: 
 world = World(worldData)
 player = Player(100, 830)
 
@@ -212,6 +230,8 @@ while(gameRunning):
 	# Handle Game Mechanics:
 	world.draw()
 	player.update()
+	enemies.update()
+	enemies.draw(gameWindow)
 
 
 	# Event Handler: 
