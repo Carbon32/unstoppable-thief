@@ -29,6 +29,7 @@ FPS = 60
 
 gameRunning = True
 tileSize = screenHeight // 15
+gameOver = False
 
 # Game Classes: #
 
@@ -79,7 +80,7 @@ class World():
 					lavaGroup.add(lava)
 				if(tile == 6): # Enemy: 
 					enemy = Enemy(columnCount * tileSize, rowCount * tileSize) 
-					enemies.add(enemy)
+					enemyGroup.add(enemy)
 				columnCount += 1
 			rowCount += 1
 
@@ -112,70 +113,86 @@ class Player():
 		self.velocityY = 0
 		self.alreadyJumped = False
 
-	def update(self):
+	def update(self, state):
 		# Movement:
 		deltaX = 0
 		deltaY = 0
-		if(pygame.key.get_pressed()[pygame.K_q]):
-			deltaX -= 5
-			self.direction = 1
-		if(pygame.key.get_pressed()[pygame.K_d]):
-			deltaX += 5
-			self.direction = 0
-		if(pygame.key.get_pressed()[pygame.K_SPACE] and self.alreadyJumped == False):
-			self.velocityY = -15
-			self.alreadyJumped = True
-		if(pygame.key.get_pressed()[pygame.K_SPACE] == False):
-			self.alreadyJumped = False
-		deltaY += self.velocityY
+
+		if(state == False):
+			if(pygame.key.get_pressed()[pygame.K_q]):
+				deltaX -= 5
+				self.direction = 1
+			if(pygame.key.get_pressed()[pygame.K_d]):
+				deltaX += 5
+				self.direction = 0
+			if(pygame.key.get_pressed()[pygame.K_SPACE] and self.alreadyJumped == False):
+				self.velocityY = -15
+				self.alreadyJumped = True
+			if(pygame.key.get_pressed()[pygame.K_SPACE] == False):
+				self.alreadyJumped = False
+			deltaY += self.velocityY
 
 
-		# Handle Animation:
-		coolDown = 5
-		if(deltaX == 0):
-			self.animCounter += 1
-			if(self.animCounter > coolDown):
-				self.animCounter = 0
-				self.index += 1
-				if(self.index >= len(self.animationIdle)):
-					self.index = 0
-				self.image = self.animationIdle[self.index]
+			# Handle Animation:
+			coolDown = 5
+			if(deltaX == 0):
+				self.animCounter += 1
+				if(self.animCounter > coolDown):
+					self.animCounter = 0
+					self.index += 1
+					if(self.index >= len(self.animationIdle)):
+						self.index = 0
+					self.image = self.animationIdle[self.index]
+					self.image = pygame.transform.flip(self.image, self.direction, False)
+			else:
+				self.animCounter += 1
+				if(self.animCounter > coolDown):
+					self.animCounter = 0
+					self.index += 1
+					if(self.index >= len(self.animationMove)):
+						self.index = 0
+					self.image = self.animationMove[self.index]
+					self.image = pygame.transform.flip(self.image, self.direction, False)
+
+			# Collision (To be improved):
+			for tile in world.tileList:
+				if(tile[1].colliderect(self.rect.x + deltaX, self.rect.y, self.rect.width - 20, self.rect.height)):
+					deltaX = 0
+
+			for tile in world.tileList:
+				if(tile[1].colliderect(self.rect.x, self.rect.y + deltaY, self.rect.width - 20, self.rect.height)):
+					if(self.velocityY < 0):
+						deltaY = tile[1].bottom - self.rect.top
+						self.velocityY = 0
+
+					elif(self.velocityY >= 0):
+						deltaY = tile[1].top - self.rect.bottom
+						self.velocityY = 0
+			if(pygame.sprite.spritecollide(self, enemyGroup, False)):
+				self.image = pygame.image.load('assets/Player/Arrest/0.png')
 				self.image = pygame.transform.flip(self.image, self.direction, False)
-		else:
-			self.animCounter += 1
-			if(self.animCounter > coolDown):
-				self.animCounter = 0
-				self.index += 1
-				if(self.index >= len(self.animationMove)):
-					self.index = 0
-				self.image = self.animationMove[self.index]
+				self.image = pygame.transform.scale(self.image, ((64, 64)))
+				state = True
+
+			if(pygame.sprite.spritecollide(self, lavaGroup, False)):
+				self.image = pygame.image.load('assets/Player/Dead/0.png')
 				self.image = pygame.transform.flip(self.image, self.direction, False)
+				self.image = pygame.transform.scale(self.image, ((64, 64)))
+				state = True
 
-		# Collision (To be improved):
-		for tile in world.tileList:
-			if(tile[1].colliderect(self.rect.x + deltaX, self.rect.y, self.rect.width - 20, self.rect.height)):
-				deltaX = 0
+			# Gravity: 
+			self.velocityY += 1
+			if(self.velocityY > 20):
+				self.velocityY = 20
 
-		for tile in world.tileList:
-			if(tile[1].colliderect(self.rect.x, self.rect.y + deltaY, self.rect.width - 20, self.rect.height)):
-				if(self.velocityY < 0):
-					deltaY = tile[1].bottom - self.rect.top
-					self.velocityY = 0
-
-				elif(self.velocityY >= 0):
-					deltaY = tile[1].top - self.rect.bottom
-					self.velocityY = 0
-
-		# Gravity: 
-		self.velocityY += 1
-		if(self.velocityY > 20):
-			self.velocityY = 20
-
-		self.rect.x += deltaX
-		self.rect.y += deltaY
+			self.rect.x += deltaX
+			self.rect.y += deltaY
 
 		# Draw Player:
 		gameWindow.blit(self.image, self.rect)
+
+		# Return Game State:
+		return state
 
 class Enemy(pygame.sprite.Sprite):
 	def __init__(self, x, y):
@@ -244,7 +261,7 @@ worldData = [ # Test Level:
 ]
 
 # Groups:
-enemies = pygame.sprite.Group()
+enemyGroup = pygame.sprite.Group()
 lavaGroup = pygame.sprite.Group()
 
 # Instances: 
@@ -262,9 +279,16 @@ while(gameRunning):
 
 	# Handle Game Mechanics:
 	world.draw()
-	player.update()
-	enemies.update()
-	enemies.draw(gameWindow)
+	gameOver = player.update(gameOver)
+	if(gameOver == False):
+		enemyGroup.update()
+	else:
+		for enemy in enemyGroup:
+			enemy.image = pygame.image.load('assets/Enemy/Arrest/0.png')
+			enemy.image = pygame.transform.flip(enemy.image, enemy.movementDirection-1, False)
+			enemy.image = pygame.transform.scale(enemy.image, ((64, 64)))
+
+	enemyGroup.draw(gameWindow)
 	lavaGroup.draw(gameWindow)
 
 
