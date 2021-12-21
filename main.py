@@ -74,8 +74,11 @@ class World():
 					imageRect.y = rowCount * tileSize
 					tile = (image, imageRect)
 					self.tileList.append(tile)
-				if(tile == 5): # Enemy: 
-					enemy = Enemy(columnCount * tileSize, rowCount * tileSize + 34) 
+				if(tile == 5): # Lava:
+					lava = Lava(columnCount * tileSize, rowCount * tileSize + 34)
+					lavaGroup.add(lava)
+				if(tile == 6): # Enemy: 
+					enemy = Enemy(columnCount * tileSize, rowCount * tileSize) 
 					enemies.add(enemy)
 				columnCount += 1
 			rowCount += 1
@@ -177,12 +180,21 @@ class Player():
 class Enemy(pygame.sprite.Sprite):
 	def __init__(self, x, y):
 		pygame.sprite.Sprite.__init__(self)
-		self.image = pygame.image.load('assets/Tiles/grass.png')
+		self.enemyAnimations = []
+		for c in range(3):
+			enemyAnimation = pygame.image.load(f'assets/Enemy/Move/{c}.png')
+			enemyAnimation = pygame.transform.scale(enemyAnimation, ((64, 64)))
+			self.enemyAnimations.append(enemyAnimation)
+
+		sprite = self.enemyAnimations[0]
+		self.image = pygame.transform.scale(sprite, (64, 64))
 		self.rect = self.image.get_rect()
 		self.rect.x = x
 		self.rect.y = y
 		self.movementDirection = 1
 		self.movementCounter = 0
+		self.index = 0
+		self.animCounter = 0
 
 	def update(self):
 		self.rect.x += self.movementDirection
@@ -190,6 +202,25 @@ class Enemy(pygame.sprite.Sprite):
 		if abs((self.movementCounter > 50)):
 			self.movementDirection *= -1
 			self.movementCounter *= -1
+
+		coolDown = 5
+		self.animCounter += 1
+		if(self.animCounter > coolDown):
+			self.animCounter = 0
+			self.index += 1
+			if(self.index >= len(self.enemyAnimations)):
+				self.index = 0
+			self.image = self.enemyAnimations[self.index]
+			self.image = pygame.transform.flip(self.image, self.movementDirection-1, False)
+
+class Lava(pygame.sprite.Sprite):
+	def __init__(self, x, y):
+		pygame.sprite.Sprite.__init__(self)
+		self.image = pygame.image.load('assets/Tiles/lava.png')
+		self.image = pygame.transform.scale(self.image, (tileSize, tileSize // 2))
+		self.rect = self.image.get_rect()
+		self.rect.x = x
+		self.rect.y = y
 
 # Game Mechanics: #
 
@@ -203,16 +234,18 @@ worldData = [ # Test Level:
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0],
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0],
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
 [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
 [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[1, 1, 1, 1, 1, 1, 1, 5, 5, 5, 5, 1, 1, 1, 1, 1],
 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
 
 # Groups:
 enemies = pygame.sprite.Group()
+lavaGroup = pygame.sprite.Group()
 
 # Instances: 
 world = World(worldData)
@@ -232,6 +265,7 @@ while(gameRunning):
 	player.update()
 	enemies.update()
 	enemies.draw(gameWindow)
+	lavaGroup.draw(gameWindow)
 
 
 	# Event Handler: 
