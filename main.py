@@ -32,6 +32,10 @@ tileSize = screenHeight // 15
 gameOver = False
 mainMenu = True
 
+# Game Menu: #
+
+menuBackground = pygame.image.load('assets/Menu/menu.png')
+
 # Game Button: #
 
 restartImage = pygame.image.load('assets/Buttons/restart.png')
@@ -321,6 +325,7 @@ while(gameRunning):
 
 	# Main Menu:
 	if(mainMenu == True):
+		gameWindow.blit(menuBackground, (0, 0))
 		if(startButton.draw()):
 			mainMenu = False
 		if(exitButton.draw()):
