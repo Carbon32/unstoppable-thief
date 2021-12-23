@@ -31,6 +31,10 @@ gameRunning = True
 tileSize = screenHeight // 15
 gameOver = False
 
+# Game Button: #
+
+restartImage = pygame.image.load('assets/Buttons/restart.png')
+
 # Game Classes: #
 
 class World():
@@ -91,27 +95,7 @@ class World():
 
 class Player():
 	def __init__(self, x, y):
-		self.animationMove = []
-		self.animationIdle = []
-		self.index = 0
-		self.animCounter = 0
-		self.direction = 0
-		for c in range(3):
-			moveAnimation = pygame.image.load(f'assets/Player/Move/{c}.png')
-			moveAnimation = pygame.transform.scale(moveAnimation, ((64, 64)))
-			self.animationMove.append(moveAnimation)
-
-			idleAnimation = pygame.image.load(f'assets/Player/Idle/{c}.png')
-			idleAnimation = pygame.transform.scale(idleAnimation, ((64, 64)))
-			self.animationIdle.append(idleAnimation)
-
-		sprite = self.animationIdle[0]
-		self.image = pygame.transform.scale(sprite, (64, 64))
-		self.rect = self.image.get_rect()
-		self.rect.x = x
-		self.rect.y = y
-		self.velocityY = 0
-		self.alreadyJumped = False
+		self.reset(x, y)
 
 	def update(self, state):
 		# Movement:
@@ -125,7 +109,7 @@ class Player():
 			if(pygame.key.get_pressed()[pygame.K_d]):
 				deltaX += 5
 				self.direction = 0
-			if(pygame.key.get_pressed()[pygame.K_SPACE] and self.alreadyJumped == False):
+			if(pygame.key.get_pressed()[pygame.K_SPACE] and self.alreadyJumped == False and self.inAir == False):
 				self.velocityY = -15
 				self.alreadyJumped = True
 			if(pygame.key.get_pressed()[pygame.K_SPACE] == False):
@@ -155,6 +139,7 @@ class Player():
 					self.image = pygame.transform.flip(self.image, self.direction, False)
 
 			# Collision (To be improved):
+			self.inAir = True
 			for tile in world.tileList:
 				if(tile[1].colliderect(self.rect.x + deltaX, self.rect.y, self.rect.width - 20, self.rect.height)):
 					deltaX = 0
@@ -168,6 +153,8 @@ class Player():
 					elif(self.velocityY >= 0):
 						deltaY = tile[1].top - self.rect.bottom
 						self.velocityY = 0
+						self.inAir = False
+
 			if(pygame.sprite.spritecollide(self, enemyGroup, False)):
 				self.image = pygame.image.load('assets/Player/Arrest/0.png')
 				self.image = pygame.transform.flip(self.image, self.direction, False)
@@ -193,6 +180,31 @@ class Player():
 
 		# Return Game State:
 		return state
+
+	def reset(self, x, y):
+		self.animationMove = []
+		self.animationIdle = []
+		self.index = 0
+		self.animCounter = 0
+		self.direction = 0
+		for c in range(3):
+			moveAnimation = pygame.image.load(f'assets/Player/Move/{c}.png')
+			moveAnimation = pygame.transform.scale(moveAnimation, ((64, 64)))
+			self.animationMove.append(moveAnimation)
+
+			idleAnimation = pygame.image.load(f'assets/Player/Idle/{c}.png')
+			idleAnimation = pygame.transform.scale(idleAnimation, ((64, 64)))
+			self.animationIdle.append(idleAnimation)
+
+		sprite = self.animationIdle[0]
+		self.image = pygame.transform.scale(sprite, (64, 64))
+		self.rect = self.image.get_rect()
+		self.rect.x = x
+		self.rect.y = y
+		self.velocityY = 0
+		self.alreadyJumped = False
+		self.inAir = True
+
 
 class Enemy(pygame.sprite.Sprite):
 	def __init__(self, x, y):
@@ -239,6 +251,28 @@ class Lava(pygame.sprite.Sprite):
 		self.rect.x = x
 		self.rect.y = y
 
+class Button():
+	def __init__(self, x, y, image):
+		self.image = image
+		self.rect = self.image.get_rect()
+		self.rect.x = x
+		self.rect.y = y
+		self.clicked = False
+
+	def draw(self):
+		buttonClicked = False
+		mousePosition = pygame.mouse.get_pos()
+		if(self.rect.collidepoint(mousePosition)):
+			if(pygame.mouse.get_pressed()[0] == True and self.clicked == False):
+				buttonClicked = True
+				self.clicked = True
+		if(pygame.mouse.get_pressed()[0] == False):
+			self.clicked = False
+
+		gameWindow.blit(self.image, self.rect)
+		return buttonClicked
+
+
 # Game Mechanics: #
 
 worldData = [ # Test Level: 
@@ -264,9 +298,13 @@ worldData = [ # Test Level:
 enemyGroup = pygame.sprite.Group()
 lavaGroup = pygame.sprite.Group()
 
-# Instances: 
+# Game Instances: 
 world = World(worldData)
-player = Player(100, 830)
+player = Player(20, 830)
+
+# Buttons: 
+restartButton = Button(screenWidth // 2 - 120, screenHeight // 2 - 200, restartImage)
+
 
 # Game Loop: #
 
@@ -280,6 +318,10 @@ while(gameRunning):
 	# Handle Game Mechanics:
 	world.draw()
 	gameOver = player.update(gameOver)
+	if(gameOver == True):
+		if(restartButton.draw()):
+			player.reset(20, 830)
+			gameOver = False
 	if(gameOver == False):
 		enemyGroup.update()
 	else:
