@@ -30,10 +30,13 @@ FPS = 60
 gameRunning = True
 tileSize = screenHeight // 15
 gameOver = False
+mainMenu = True
 
 # Game Button: #
 
 restartImage = pygame.image.load('assets/Buttons/restart.png')
+startImage = pygame.image.load('assets/Buttons/start.png')
+exitImage = pygame.image.load('assets/Buttons/exit.png')
 
 # Game Classes: #
 
@@ -304,7 +307,8 @@ player = Player(20, 830)
 
 # Buttons: 
 restartButton = Button(screenWidth // 2 - 120, screenHeight // 2 - 200, restartImage)
-
+startButton = Button(screenWidth // 2 - 120, screenHeight // 2 - 200, startImage)
+exitButton = Button(screenWidth // 2 - 120, screenHeight // 2, exitImage)
 
 # Game Loop: #
 
@@ -315,23 +319,31 @@ while(gameRunning):
 	# FPS Handler: 
 	handleFPS.tick(FPS)
 
-	# Handle Game Mechanics:
-	world.draw()
-	gameOver = player.update(gameOver)
-	if(gameOver == True):
-		if(restartButton.draw()):
-			player.reset(20, 830)
-			gameOver = False
-	if(gameOver == False):
-		enemyGroup.update()
-	else:
-		for enemy in enemyGroup:
-			enemy.image = pygame.image.load('assets/Enemy/Arrest/0.png')
-			enemy.image = pygame.transform.flip(enemy.image, enemy.movementDirection-1, False)
-			enemy.image = pygame.transform.scale(enemy.image, ((64, 64)))
+	# Main Menu:
+	if(mainMenu == True):
+		if(startButton.draw()):
+			mainMenu = False
+		if(exitButton.draw()):
+			gameRunning = False
 
-	enemyGroup.draw(gameWindow)
-	lavaGroup.draw(gameWindow)
+	else:
+		# Handle Game Mechanics:
+		world.draw()
+		gameOver = player.update(gameOver)
+		if(gameOver == True):
+			if(restartButton.draw()):
+				player.reset(20, 830)
+				gameOver = False
+		if(gameOver == False):
+			enemyGroup.update()
+		else:
+			for enemy in enemyGroup:
+				enemy.image = pygame.image.load('assets/Enemy/Arrest/0.png')
+				enemy.image = pygame.transform.flip(enemy.image, enemy.movementDirection-1, False)
+				enemy.image = pygame.transform.scale(enemy.image, ((64, 64)))
+
+		enemyGroup.draw(gameWindow)
+		lavaGroup.draw(gameWindow)
 
 
 	# Event Handler: 
