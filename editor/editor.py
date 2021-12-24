@@ -33,7 +33,7 @@ editorRunning = True
 editorRows = 15
 editorColumns = 15
 tileSize = screenHeight // editorRows
-editorTiles = 8
+editorTiles = 9
 level = 1
 thisTile = 0
 
@@ -152,13 +152,13 @@ while editorRunning:
 
 	# Save & Load:
 	if buttonSave.draw():
-		with open(f'levels/level{level}_data.csv', 'w', newline='') as csvfile:
+		with open(f'levels/level{level}.csv', 'w', newline='') as csvfile:
 			writer = csv.writer(csvfile, delimiter = ',')
 			for row in worldData:
 				writer.writerow(row)
 
 	if butttonLoad.draw():
-		with open(f'levels/level{level}_data.csv', newline='') as csvfile:
+		with open(f'levels/level{level}.csv', newline='') as csvfile:
 			reader = csv.reader(csvfile, delimiter = ',')
 			for x, row in enumerate(reader):
 				for y, tile in enumerate(row):

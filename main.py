@@ -8,14 +8,15 @@
 # Imports: #
 
 import pygame
-
+import csv
+  
 # Pygame Initialization: #
 
 pygame.init()
 
 # Game Window: #
 
-screenWidth, screenHeight = 1000, 1000
+screenWidth, screenHeight = 990, 1000
 
 gameWindow = pygame.display.set_mode((screenWidth, screenHeight))
 pygame.display.set_caption("Unstoppable Thief: ")
@@ -29,8 +30,30 @@ FPS = 60
 
 gameRunning = True
 tileSize = screenHeight // 15
-gameOver = False
+gameOver = 0
 mainMenu = True
+level = 1
+maxLevels = 10
+
+# Game Functions: #
+
+def resetLevel(level):
+	player.reset(100, 830)
+	enemyGroup.empty()
+	lavaGroup.empty()
+	moneyGroup.empty()
+	for r in range(15):
+		row = [-1] * 15
+		worldData.append(row)
+
+	with open(f'levels/level{level}.csv', newline='') as csvfile:
+		reader = csv.reader(csvfile, delimiter=',')
+		for x, row in enumerate(reader):
+			for y, tile in enumerate(row):
+				worldData[x][y] = int(tile)
+	world = World(worldData)
+	return world
+
 
 # Game Menu: #
 
@@ -108,6 +131,9 @@ class World():
 				if(tile == 7): # Enemy: 
 					enemy = Enemy(columnCount * tileSize, rowCount * tileSize) 
 					enemyGroup.add(enemy)
+				if(tile == 8): # Money: 
+					money = Money(columnCount * tileSize, rowCount * tileSize) 
+					moneyGroup.add(money)
 				columnCount += 1
 			rowCount += 1
 
@@ -133,7 +159,7 @@ class Player():
 				deltaX += 5
 				self.direction = 0
 			if(pygame.key.get_pressed()[pygame.K_SPACE] and self.alreadyJumped == False and self.inAir == False):
-				self.velocityY = -15
+				self.velocityY = -18
 				self.alreadyJumped = True
 			if(pygame.key.get_pressed()[pygame.K_SPACE] == False):
 				self.alreadyJumped = False
@@ -182,13 +208,17 @@ class Player():
 				self.image = pygame.image.load('assets/Player/Arrest/0.png')
 				self.image = pygame.transform.flip(self.image, self.direction, False)
 				self.image = pygame.transform.scale(self.image, ((64, 64)))
-				state = True
+				state = -1
 
 			if(pygame.sprite.spritecollide(self, lavaGroup, False)):
 				self.image = pygame.image.load('assets/Player/Dead/0.png')
 				self.image = pygame.transform.flip(self.image, self.direction, False)
 				self.image = pygame.transform.scale(self.image, ((64, 64)))
-				state = True
+				state = -1
+
+			if(pygame.sprite.spritecollide(self, moneyGroup, True)):
+				state = 1
+
 
 			# Gravity: 
 			self.velocityY += 1
@@ -274,6 +304,15 @@ class Lava(pygame.sprite.Sprite):
 		self.rect.x = x
 		self.rect.y = y
 
+class Money(pygame.sprite.Sprite):
+	def __init__(self, x, y):
+		pygame.sprite.Sprite.__init__(self)
+		self.image = pygame.image.load('assets/Tiles/money.png')
+		self.image = pygame.transform.scale(self.image, (tileSize, tileSize))
+		self.rect = self.image.get_rect()
+		self.rect.x = x
+		self.rect.y = y
+
 class Button():
 	def __init__(self, x, y, image):
 		self.image = image
@@ -298,30 +337,27 @@ class Button():
 
 # Game Mechanics: #
 
-worldData = [ # Test Level: 
-[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],
-[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
-[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
-[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
-[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
-[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
-[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
-[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
-[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
-[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
-[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
-[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
-[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
-[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,7,-1,-1,5],
-[3,3,3,3,3,3,3,6,6,6,3,3,3,3,3]
-]
-
 # Groups:
 enemyGroup = pygame.sprite.Group()
 lavaGroup = pygame.sprite.Group()
+moneyGroup = pygame.sprite.Group()
 
-# Game Instances: 
+# World:
+worldData = []
+
+for r in range(15):
+	row = [-1] * 15
+	worldData.append(row)
+
+with open(f'levels/level{level}.csv', newline='') as csvfile:
+	reader = csv.reader(csvfile, delimiter=',')
+	for x, row in enumerate(reader):
+		for y, tile in enumerate(row):
+			worldData[x][y] = int(tile)
+
 world = World(worldData)
+
+# Player:
 player = Player(100, 830)
 
 # Buttons: 
@@ -350,20 +386,33 @@ while(gameRunning):
 		# Handle Game Mechanics:
 		world.draw()
 		gameOver = player.update(gameOver)
-		if(gameOver == True):
+		if(gameOver == -1):
 			if(restartButton.draw()):
-				player.reset(100, 830)
-				gameOver = False
-		if(gameOver == False):
+				worldData = []
+				world = resetLevel(level)
+				gameOver = 0
+		if(gameOver == 0):
 			enemyGroup.update()
 		else:
 			for enemy in enemyGroup:
 				enemy.image = pygame.image.load('assets/Enemy/Arrest/0.png')
 				enemy.image = pygame.transform.flip(enemy.image, enemy.movementDirection-1, False)
 				enemy.image = pygame.transform.scale(enemy.image, ((64, 64)))
-
+		if(gameOver == 1):
+			level += 1
+			if(level <= maxLevels):
+				worldData = []
+				world = resetLevel(level)
+				gameOver = 0
+			else:
+				if(restartButton.draw()):
+					level = 1
+					worldData = []
+					world = resetLevel(level)
+					gameOver = 0
 		enemyGroup.draw(gameWindow)
 		lavaGroup.draw(gameWindow)
+		moneyGroup.draw(gameWindow)
 
 
 	# Event Handler: 
