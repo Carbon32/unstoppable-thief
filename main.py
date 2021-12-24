@@ -52,44 +52,60 @@ class World():
 		dirtTile = pygame.image.load('assets/Tiles/dirt.png')
 		badDirtTile = pygame.image.load('assets/Tiles/bad_dirt.png')
 		sandTile = pygame.image.load('assets/Tiles/sand.png')
+		woodWall = pygame.image.load('assets/Tiles/wood_wall.png')
+		shadow = pygame.image.load('assets/Tiles/shadow.png')
 
 		# Select Tile:
 		rowCount = 0
 		for row in data:
 			columnCount = 0 
 			for tile in row:
-				if(tile == 1): # Dirt: 
+				if(tile == 0): # Dirt: 
 					image = pygame.transform.scale(dirtTile, (tileSize, tileSize))
 					imageRect = image.get_rect()
 					imageRect.x = columnCount * tileSize
 					imageRect.y = rowCount * tileSize
 					tile = (image, imageRect)
 					self.tileList.append(tile)
-				if(tile == 2): # Grass:
+				if(tile == 1): # Grass:
 					image = pygame.transform.scale(grassTile, (tileSize, tileSize))
 					imageRect = image.get_rect()
 					imageRect.x = columnCount * tileSize
 					imageRect.y = rowCount * tileSize
 					tile = (image, imageRect)
 					self.tileList.append(tile)
-				if(tile == 3): # Bad Dirt:
+				if(tile == 2): # Bad Dirt:
 					image = pygame.transform.scale(badDirtTile, (tileSize, tileSize))
 					imageRect = image.get_rect()
 					imageRect.x = columnCount * tileSize
 					imageRect.y = rowCount * tileSize
 					tile = (image, imageRect)
 					self.tileList.append(tile)
-				if(tile == 4): # Sand: 
+				if(tile == 3): # Sand: 
 					image = pygame.transform.scale(sandTile, (tileSize, tileSize))
 					imageRect = image.get_rect()
 					imageRect.x = columnCount * tileSize
 					imageRect.y = rowCount * tileSize
 					tile = (image, imageRect)
 					self.tileList.append(tile)
-				if(tile == 5): # Lava:
+				if(tile == 4): # Wooden Wall: 
+					image = pygame.transform.scale(woodWall, (tileSize, tileSize))
+					imageRect = image.get_rect()
+					imageRect.x = columnCount * tileSize
+					imageRect.y = rowCount * tileSize
+					tile = (image, imageRect)
+					self.tileList.append(tile)
+				if(tile == 5): # Shadow: 
+					image = pygame.transform.scale(shadow, (tileSize, tileSize))
+					imageRect = image.get_rect()
+					imageRect.x = columnCount * tileSize
+					imageRect.y = rowCount * tileSize
+					tile = (image, imageRect)
+					self.tileList.append(tile)
+				if(tile == 6): # Lava:
 					lava = Lava(columnCount * tileSize, rowCount * tileSize + 34)
 					lavaGroup.add(lava)
-				if(tile == 6): # Enemy: 
+				if(tile == 7): # Enemy: 
 					enemy = Enemy(columnCount * tileSize, rowCount * tileSize) 
 					enemyGroup.add(enemy)
 				columnCount += 1
@@ -283,22 +299,21 @@ class Button():
 # Game Mechanics: #
 
 worldData = [ # Test Level: 
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[1, 1, 1, 1, 1, 1, 1, 5, 5, 5, 5, 1, 1, 1, 1, 1],
-[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],
+[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
+[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
+[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
+[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
+[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
+[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
+[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
+[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
+[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
+[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
+[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
+[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,5],
+[5,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,7,-1,-1,5],
+[3,3,3,3,3,3,3,6,6,6,3,3,3,3,3]
 ]
 
 # Groups:
@@ -307,7 +322,7 @@ lavaGroup = pygame.sprite.Group()
 
 # Game Instances: 
 world = World(worldData)
-player = Player(20, 830)
+player = Player(100, 830)
 
 # Buttons: 
 restartButton = Button(screenWidth // 2 - 120, screenHeight // 2 - 200, restartImage)
@@ -337,7 +352,7 @@ while(gameRunning):
 		gameOver = player.update(gameOver)
 		if(gameOver == True):
 			if(restartButton.draw()):
-				player.reset(20, 830)
+				player.reset(100, 830)
 				gameOver = False
 		if(gameOver == False):
 			enemyGroup.update()
