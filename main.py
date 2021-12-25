@@ -8,10 +8,13 @@
 # Imports: #
 
 import pygame
+from pygame import mixer
 import csv
   
 # Pygame Initialization: #
 
+pygame.mixer.pre_init(44100, -16, 2, 512)
+mixer.init()
 pygame.init()
 
 # Game Window: #
@@ -37,6 +40,8 @@ maxLevels = 10
 coins = 0
 coinsFont = pygame.font.SysFont('System', 32)
 coinsColor = (255, 255, 255)
+gameOverFont = pygame.font.SysFont('System', 72)
+gameOverColor = (255, 50, 75)
 
 # Game Functions: #
 
@@ -64,6 +69,17 @@ def drawText(text, font, color, x, y):
 # Game Menu: #
 
 menuBackground = pygame.image.load('assets/Menu/menu.png')
+
+# Game Sounds: #
+
+coinSound = pygame.mixer.Sound('sounds/coin.wav')
+coinSound.set_volume(0.5)
+deathSound = pygame.mixer.Sound('sounds/death.wav')
+deathSound.set_volume(0.5)
+jumpSound = pygame.mixer.Sound('sounds/jump.wav')
+jumpSound.set_volume(0.5)
+arrestSound = pygame.mixer.Sound('sounds/arrest.wav')
+arrestSound.set_volume(0.2)
 
 # Game Button: #
 
@@ -168,6 +184,7 @@ class Player():
 				deltaX += 5
 				self.direction = 0
 			if(pygame.key.get_pressed()[pygame.K_SPACE] and self.alreadyJumped == False and self.inAir == False):
+				jumpSound.play()
 				self.velocityY = -18
 				self.alreadyJumped = True
 			if(pygame.key.get_pressed()[pygame.K_SPACE] == False):
@@ -214,12 +231,14 @@ class Player():
 						self.inAir = False
 
 			if(pygame.sprite.spritecollide(self, enemyGroup, False)):
+				arrestSound.play()
 				self.image = pygame.image.load('assets/Player/Arrest/0.png')
 				self.image = pygame.transform.flip(self.image, self.direction, False)
 				self.image = pygame.transform.scale(self.image, ((64, 64)))
 				state = -1
 
 			if(pygame.sprite.spritecollide(self, lavaGroup, False)):
+				deathSound.play()
 				self.image = pygame.image.load('assets/Player/Dead/0.png')
 				self.image = pygame.transform.flip(self.image, self.direction, False)
 				self.image = pygame.transform.scale(self.image, ((64, 64)))
@@ -408,6 +427,7 @@ while(gameRunning):
 		world.draw()
 		gameOver = player.update(gameOver)
 		if(gameOver == -1):
+			drawText('GAME OVER', gameOverFont, gameOverColor, screenWidth // 2 - 130, screenHeight // 2 + 120)
 			if(restartButton.draw()):
 				worldData = []
 				world = resetLevel(level)
@@ -416,6 +436,7 @@ while(gameRunning):
 		if(gameOver == 0):
 			enemyGroup.update()
 			if(pygame.sprite.spritecollide(player, coinGroup, True)):
+				coinSound.play()
 				coins += 1
 			drawText('Coins: ' + str(coins), coinsFont, coinsColor, tileSize - 10, 20)
 		else:
