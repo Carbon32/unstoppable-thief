@@ -71,7 +71,9 @@ def drawText(text, font, color, x, y):
 menuBackground = pygame.image.load('assets/Menu/menu.png')
 
 # Game Sounds: #
-
+pygame.mixer.music.load('sounds/music.mp3')
+pygame.mixer.music.set_volume(0.2)
+pygame.mixer.music.play(-1, 0.0, 5000)
 coinSound = pygame.mixer.Sound('sounds/coin.wav')
 coinSound.set_volume(0.5)
 deathSound = pygame.mixer.Sound('sounds/death.wav')
