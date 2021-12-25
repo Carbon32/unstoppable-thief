@@ -161,6 +161,14 @@ class World():
 				if(tile == 9): # Coin: 
 					coin = Coin(columnCount * tileSize + (tileSize // 2), rowCount * tileSize + (tileSize // 2)) 
 					coinGroup.add(coin)
+				if(tile == 10): # Platform (Left, right): 
+					platform = Platform(columnCount * tileSize, rowCount * tileSize, True, False)
+					platformGroup.add(platform) 
+					coinGroup.add(coin)
+				if(tile == 11): # Platform (Up, down): 
+					platform = Platform(columnCount * tileSize, rowCount * tileSize, False, True)
+					platformGroup.add(platform) 
+					coinGroup.add(coin)
 				columnCount += 1
 			rowCount += 1
 
@@ -287,6 +295,26 @@ class Player():
 		self.alreadyJumped = False
 		self.inAir = True
 
+class Platform(pygame.sprite.Sprite):
+	def __init__(self, x, y, moveX, moveY):
+		pygame.sprite.Sprite.__init__(self)
+		image = pygame.image.load('assets/Tiles/platform.png')
+		self.image = pygame.transform.scale(image, (tileSize, tileSize // 2))
+		self.rect = self.image.get_rect()
+		self.rect.x = x
+		self.rect.y = y
+		self.movementCounter = 0
+		self.movementDirection = 1
+		self.moveX = moveX
+		self.moveY = moveY
+
+	def update(self):
+		self.rect.x += self.movementDirection * self.moveX
+		self.rect.y += self.movementDirection *self.moveY
+		self.movementCounter += 1
+		if(abs(self.movementCounter) > 50):
+			self.movementDirection *= -1
+			self.movementCounter *= -1
 
 class Enemy(pygame.sprite.Sprite):
 	def __init__(self, x, y):
@@ -379,6 +407,7 @@ enemyGroup = pygame.sprite.Group()
 lavaGroup = pygame.sprite.Group()
 moneyGroup = pygame.sprite.Group()
 coinGroup = pygame.sprite.Group()
+platformGroup = pygame.sprite.Group()
 
 # World:
 worldData = []
@@ -437,6 +466,7 @@ while(gameRunning):
 				coins = 0
 		if(gameOver == 0):
 			enemyGroup.update()
+			platformGroup.update()
 			if(pygame.sprite.spritecollide(player, coinGroup, True)):
 				coinSound.play()
 				coins += 1
@@ -463,7 +493,7 @@ while(gameRunning):
 		lavaGroup.draw(gameWindow)
 		moneyGroup.draw(gameWindow)
 		coinGroup.draw(gameWindow)
-
+		platformGroup.draw(gameWindow)
 
 	# Event Handler: 
 	for event in pygame.event.get():
