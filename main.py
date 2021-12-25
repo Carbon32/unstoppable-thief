@@ -50,6 +50,8 @@ def resetLevel(level):
 	enemyGroup.empty()
 	lavaGroup.empty()
 	moneyGroup.empty()
+	coinGroup.empty()
+	platformGroup.empty()
 	for r in range(15):
 		row = [-1] * 15
 		worldData.append(row)
@@ -257,6 +259,20 @@ class Player():
 			if(pygame.sprite.spritecollide(self, moneyGroup, True)):
 				state = 1
 
+			thresh = 30
+			for platform in platformGroup:
+				if(platform.rect.colliderect(self.rect.x + deltaX, self.rect.y, self.rect.width - 20, self.rect.height)):
+					deltaX = 0
+				if(platform.rect.colliderect(self.rect.x, self.rect.y + deltaY, self.rect.width - 20, self.rect.height)):
+					if abs((self.rect.top + deltaY) - platform.rect.bottom) < thresh:
+						self.velocityY = 0
+						deltaY = platform.rect.bottom - self.rect.top
+					elif abs((self.rect.bottom + deltaY) - platform.rect.top) < thresh:
+						self.rect.bottom = platform.rect.top
+						deltaY = 0
+						self.inAir = False
+					if(platform.moveX == True):
+						self.rect.x += platform.movementDirection
 			# Gravity: 
 			self.velocityY += 1
 			if(self.velocityY > 20):
