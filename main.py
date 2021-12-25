@@ -34,6 +34,9 @@ gameOver = 0
 mainMenu = True
 level = 1
 maxLevels = 10
+coins = 0
+coinsFont = pygame.font.SysFont('System', 32)
+coinsColor = (255, 255, 255)
 
 # Game Functions: #
 
@@ -54,6 +57,9 @@ def resetLevel(level):
 	world = World(worldData)
 	return world
 
+def drawText(text, font, color, x, y):
+	image = font.render(text, True, color)
+	gameWindow.blit(image, (x, y))
 
 # Game Menu: #
 
@@ -134,6 +140,9 @@ class World():
 				if(tile == 8): # Money: 
 					money = Money(columnCount * tileSize, rowCount * tileSize) 
 					moneyGroup.add(money)
+				if(tile == 9): # Coin: 
+					coin = Coin(columnCount * tileSize + (tileSize // 2), rowCount * tileSize + (tileSize // 2)) 
+					coinGroup.add(coin)
 				columnCount += 1
 			rowCount += 1
 
@@ -219,7 +228,6 @@ class Player():
 			if(pygame.sprite.spritecollide(self, moneyGroup, True)):
 				state = 1
 
-
 			# Gravity: 
 			self.velocityY += 1
 			if(self.velocityY > 20):
@@ -304,6 +312,14 @@ class Lava(pygame.sprite.Sprite):
 		self.rect.x = x
 		self.rect.y = y
 
+class Coin(pygame.sprite.Sprite):
+	def __init__(self, x, y):
+		pygame.sprite.Sprite.__init__(self)
+		self.image = pygame.image.load('assets/Coins/coin.png')
+		self.image = pygame.transform.scale(self.image, (tileSize // 2, tileSize // 2))
+		self.rect = self.image.get_rect()
+		self.rect.center = (x, y)
+
 class Money(pygame.sprite.Sprite):
 	def __init__(self, x, y):
 		pygame.sprite.Sprite.__init__(self)
@@ -341,6 +357,7 @@ class Button():
 enemyGroup = pygame.sprite.Group()
 lavaGroup = pygame.sprite.Group()
 moneyGroup = pygame.sprite.Group()
+coinGroup = pygame.sprite.Group()
 
 # World:
 worldData = []
@@ -364,6 +381,10 @@ player = Player(100, 830)
 restartButton = Button(screenWidth // 2 - 120, screenHeight // 2 - 200, restartImage)
 startButton = Button(screenWidth // 2 - 120, screenHeight // 2 - 200, startImage)
 exitButton = Button(screenWidth // 2 - 120, screenHeight // 2, exitImage)
+
+# User Inferface: 
+scoreCoin = Coin(tileSize // 2, tileSize // 2)
+coinGroup.add(scoreCoin)
 
 # Game Loop: #
 
@@ -391,8 +412,12 @@ while(gameRunning):
 				worldData = []
 				world = resetLevel(level)
 				gameOver = 0
+				coins = 0
 		if(gameOver == 0):
 			enemyGroup.update()
+			if(pygame.sprite.spritecollide(player, coinGroup, True)):
+				coins += 1
+			drawText('Coins: ' + str(coins), coinsFont, coinsColor, tileSize - 10, 20)
 		else:
 			for enemy in enemyGroup:
 				enemy.image = pygame.image.load('assets/Enemy/Arrest/0.png')
@@ -406,6 +431,7 @@ while(gameRunning):
 				gameOver = 0
 			else:
 				if(restartButton.draw()):
+					coins = 0
 					level = 1
 					worldData = []
 					world = resetLevel(level)
@@ -413,6 +439,7 @@ while(gameRunning):
 		enemyGroup.draw(gameWindow)
 		lavaGroup.draw(gameWindow)
 		moneyGroup.draw(gameWindow)
+		coinGroup.draw(gameWindow)
 
 
 	# Event Handler: 

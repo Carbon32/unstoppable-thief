@@ -33,7 +33,7 @@ editorRunning = True
 editorRows = 15
 editorColumns = 15
 tileSize = screenHeight // editorRows
-editorTiles = 9
+editorTiles = 10
 level = 1
 thisTile = 0
 
