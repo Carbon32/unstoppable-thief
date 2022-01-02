@@ -1,7 +1,7 @@
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 #                                                                             #
-#                   Unstoppable Thief, Level Editor                           #
-#                                         Developer: Carbon                   #
+#                       Unstoppable Thief, Level Editor                       #
+#                             Developer: Carbon                   			  #
 #                                                                             #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
@@ -33,7 +33,7 @@ editorRunning = True
 editorRows = 15
 editorColumns = 15
 tileSize = screenHeight // editorRows
-editorTiles = 12
+editorTiles = 13
 level = 1
 thisTile = 0
 
