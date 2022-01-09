@@ -18,6 +18,10 @@ window.init()
 
 mainMenu = True
 
+# Game Icon: #
+
+setGameIcon('assets/Enemy/Arrest/0.png')
+
 # Music: #
 playMusic("sounds/music.mp3", 0.1)
 

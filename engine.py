@@ -61,6 +61,10 @@ def loadNextLevel(worldData : list):
 	state = 0
 	return worldData
 
+def setGameIcon(path : str):
+	icon = pygame.image.load(path)
+	pygame.display.set_icon(icon)
+
 def checkGameState():
 	return state
 
