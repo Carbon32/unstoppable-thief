@@ -7,9 +7,7 @@
 
 # Imports: #
 
-import pygame
-from pygame import mixer
-import csv
+import pygame ; from pygame import mixer ; import csv
   
 # Pygame Initialization: #
 
@@ -18,23 +16,26 @@ mixer.init()
 pygame.init()
 
 # Engine Variables: #
+
+# Level: 
+
+level = 1 ; maxLevels = 5
+
+# Sound:
+
+jumpSound = mixer.Sound ; arrestSound = mixer.Sound ; coinSound = mixer.Sound ; deathSound = mixer.Sound
+
+# Map:
+
 tileSize = 67
-level = 1
-maxLevels = 5
-state = 0
-coins = 0
-jumpSound = mixer.Sound
-arrestSound = mixer.Sound
-coinSound = mixer.Sound
-deathSound = mixer.Sound
+
+# Game:
+
+state = 0 ; coins = 0
 
 # Groups: #
-enemyGroup = pygame.sprite.Group()
-lavaGroup = pygame.sprite.Group()
-moneyGroup = pygame.sprite.Group()
-coinGroup = pygame.sprite.Group()
-platformGroup = pygame.sprite.Group()
-playersGroup = pygame.sprite.Group()
+enemyGroup = pygame.sprite.Group() ; lavaGroup = pygame.sprite.Group() ; moneyGroup = pygame.sprite.Group() ; coinGroup = pygame.sprite.Group()
+platformGroup = pygame.sprite.Group() ; playersGroup = pygame.sprite.Group()
 
 # Engine Functions: #
 
