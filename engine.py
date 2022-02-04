@@ -44,6 +44,12 @@ lavaParticles = [] ; runParticles = [] ; jumpParticles = []
 
 # Engine Functions: #
 
+def circleSurface(radius : int, color : tuple):
+	surface = pygame.Surface((radius * 2, radius * 2))
+	pygame.draw.circle(surface, color, (radius, radius), radius)
+	surface.set_colorkey((0, 0, 0))
+	return surface
+
 def addGameParticle(particleType : str, x : int, y : int):
 	global lavaParticles, runParticles, jumpParticles
 	particleType.lower()
@@ -69,6 +75,8 @@ def drawGameParticles(engineWindow : pygame.Surface, particleType : str, color :
 			particle[0][1] += particle[1][1]
 			particle[2] -= 0.1
 			pygame.draw.circle(engineWindow, color, [int(particle[0][0]), int(particle[0][1])], int(particle[2]))
+			radius = particle[2] * 2
+			engineWindow.blit(circleSurface(radius, color), (int(particle[0][0] - radius), int(particle[0][1] - radius)), special_flags = pygame.BLEND_RGB_ADD)
 			if(particle[2] <= 0):
 				lavaParticles.remove(particle)
 
@@ -180,12 +188,12 @@ def drawGameSprites(engineWindow : pygame.Surface, world : list):
 	platformGroup.draw(engineWindow)
 
 def loadGameImage(path : str, width : int, height : int):
-		image = pygame.image.load(path)
+		image = pygame.image.load(path).convert_alpha()
 		image = pygame.transform.scale(image, (width, height))
 		return image
 
 def loadStaticImage(path : str):
-		image = pygame.image.load(path)
+		image = pygame.image.load(path).convert_alpha()
 		return image
 
 def assignWorldTiles():
@@ -263,12 +271,12 @@ class World():
 		global tileSize
 		self.tileList = []
 		# Load Tile:
-		grassTile = pygame.image.load('assets/Tiles/grass.png')
-		dirtTile = pygame.image.load('assets/Tiles/dirt.png')
-		badDirtTile = pygame.image.load('assets/Tiles/bad_dirt.png')
-		sandTile = pygame.image.load('assets/Tiles/sand.png')
-		woodWall = pygame.image.load('assets/Tiles/wood_wall.png')
-		shadow = pygame.image.load('assets/Tiles/shadow.png')
+		grassTile = pygame.image.load('assets/Tiles/grass.png').convert_alpha()
+		dirtTile = pygame.image.load('assets/Tiles/dirt.png').convert_alpha()
+		badDirtTile = pygame.image.load('assets/Tiles/bad_dirt.png').convert_alpha()
+		sandTile = pygame.image.load('assets/Tiles/sand.png').convert_alpha()
+		woodWall = pygame.image.load('assets/Tiles/wood_wall.png').convert_alpha()
+		shadow = pygame.image.load('assets/Tiles/shadow.png').convert_alpha()
 
 		# Select Tile:
 		rowCount = 0
@@ -364,7 +372,7 @@ class Platform(pygame.sprite.Sprite):
 	def __init__(self, x : int, y : int, moveX : bool, moveY : bool):
 		global tileSize
 		pygame.sprite.Sprite.__init__(self)
-		image = pygame.image.load('assets/Tiles/platform.png')
+		image = pygame.image.load('assets/Tiles/platform.png').convert_alpha()
 		self.image = pygame.transform.scale(image, (tileSize, tileSize // 2))
 		self.rect = self.image.get_rect()
 		self.rect.x = x
@@ -458,17 +466,17 @@ class Player(pygame.sprite.Sprite):
 
 			if(pygame.sprite.spritecollide(self, enemyGroup, False)):
 				arrestSound.play()
-				self.image = pygame.image.load('assets/Player/Arrest/0.png')
+				self.image = pygame.image.load('assets/Player/Arrest/0.png').convert_alpha()
 				self.image = pygame.transform.flip(self.image, self.direction, False)
 				self.image = pygame.transform.scale(self.image, ((64, 64)))
 				for enemy in enemyGroup:
-					enemy.image = pygame.image.load('assets/Enemy/Arrest/0.png')
+					enemy.image = pygame.image.load('assets/Enemy/Arrest/0.png').convert_alpha()
 					enemy.image = pygame.transform.scale(enemy.image, ((64, 64)))
 				state = -1
 
 			if(pygame.sprite.spritecollide(self, lavaGroup, False)):
 				deathSound.play()
-				self.image = pygame.image.load('assets/Player/Dead/0.png')
+				self.image = pygame.image.load('assets/Player/Dead/0.png').convert_alpha()
 				self.image = pygame.transform.flip(self.image, self.direction, False)
 				self.image = pygame.transform.scale(self.image, ((64, 64)))
 				state = -1
@@ -509,11 +517,11 @@ class Player(pygame.sprite.Sprite):
 		self.animCounter = 0
 		self.direction = 0
 		for c in range(3):
-			moveAnimation = pygame.image.load(f'assets/Player/Move/{c}.png')
+			moveAnimation = pygame.image.load(f'assets/Player/Move/{c}.png').convert_alpha()
 			moveAnimation = pygame.transform.scale(moveAnimation, ((64, 64)))
 			self.animationMove.append(moveAnimation)
 
-			idleAnimation = pygame.image.load(f'assets/Player/Idle/{c}.png')
+			idleAnimation = pygame.image.load(f'assets/Player/Idle/{c}.png').convert_alpha()
 			idleAnimation = pygame.transform.scale(idleAnimation, ((64, 64)))
 			self.animationIdle.append(idleAnimation)
 
@@ -533,7 +541,7 @@ class Enemy(pygame.sprite.Sprite):
 		pygame.sprite.Sprite.__init__(self)
 		self.enemyAnimations = []
 		for c in range(3):
-			enemyAnimation = pygame.image.load(f'assets/Enemy/Move/{c}.png')
+			enemyAnimation = pygame.image.load(f'assets/Enemy/Move/{c}.png').convert_alpha()
 			enemyAnimation = pygame.transform.scale(enemyAnimation, ((64, 64)))
 			self.enemyAnimations.append(enemyAnimation)
 
@@ -570,7 +578,7 @@ class Lava(pygame.sprite.Sprite):
 	global tileSize
 	def __init__(self, x : int, y : int):
 		pygame.sprite.Sprite.__init__(self)
-		self.image = pygame.image.load('assets/Tiles/lava.png')
+		self.image = pygame.image.load('assets/Tiles/lava.png').convert_alpha()
 		self.image = pygame.transform.scale(self.image, (tileSize, tileSize // 2))
 		self.rect = self.image.get_rect()
 		self.rect.x = x
@@ -582,7 +590,7 @@ class Coin(pygame.sprite.Sprite):
 	global tileSize
 	def __init__(self, x : int, y : int):
 		pygame.sprite.Sprite.__init__(self)
-		self.image = pygame.image.load('assets/Coins/coin.png')
+		self.image = pygame.image.load('assets/Coins/coin.png').convert_alpha()
 		self.image = pygame.transform.scale(self.image, (tileSize // 2, tileSize // 2))
 		self.rect = self.image.get_rect()
 		self.rect.center = (x, y)
@@ -593,7 +601,7 @@ class Money(pygame.sprite.Sprite):
 	global tileSize
 	def __init__(self, x : int, y : int):
 		pygame.sprite.Sprite.__init__(self)
-		self.image = pygame.image.load('assets/Tiles/money.png')
+		self.image = pygame.image.load('assets/Tiles/money.png').convert_alpha()
 		self.image = pygame.transform.scale(self.image, (tileSize, tileSize))
 		self.rect = self.image.get_rect()
 		self.rect.x = x
