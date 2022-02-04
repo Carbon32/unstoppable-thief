@@ -71,6 +71,9 @@ while(window.engineRunning):
 			window.engineRunning = False
 	else:
 		drawGameSprites(window.engineWindow, world)
+		drawGameParticles(window.engineWindow, "lava", (255, 255, 255))
+		drawGameParticles(window.engineWindow, "run", (255, 255, 255))
+		drawGameParticles(window.engineWindow, "jump", (255, 255, 255))
 		if(checkGameState() == -1):
 			drawText(window.engineWindow, 'GAME OVER', (255, 50, 50), 70, window.screenWidth // 2 - 130, window.screenHeight // 2 - 100)
 			if(restartButton.draw(window.engineWindow)):

@@ -7,7 +7,7 @@
 
 # Imports: #
 
-import pygame ; from pygame import mixer ; import csv
+import pygame ; from pygame import mixer ; import csv ; import random
   
 # Pygame Initialization: #
 
@@ -34,10 +34,64 @@ tileSize = 67
 state = 0 ; coins = 0
 
 # Groups: #
+
 enemyGroup = pygame.sprite.Group() ; lavaGroup = pygame.sprite.Group() ; moneyGroup = pygame.sprite.Group() ; coinGroup = pygame.sprite.Group()
 platformGroup = pygame.sprite.Group() ; playersGroup = pygame.sprite.Group()
 
+# Particles:
+
+lavaParticles = [] ; runParticles = [] ; jumpParticles = []
+
 # Engine Functions: #
+
+def addGameParticle(particleType : str, x : int, y : int):
+	global lavaParticles, runParticles, jumpParticles
+	particleType.lower()
+
+	if(particleType == "lava"):
+		lavaParticles.append([[x + 20, y + 30], [0, -3], random.randint(12, 18)])
+
+	elif(particleType == "run"):
+		runParticles.append([[x + 10, y + 60], [random.randint(-4, 4), -1], random.randint(1, 3)])
+
+	elif(particleType == "jump"):
+		jumpParticles.append([[x + 10, y + 60], [0, -2], random.randint(4, 6)])
+
+	else:
+		print(f"Cannot find {particleType} in the game particles list. The particle won't be displayed.")
+
+def drawGameParticles(engineWindow : pygame.Surface, particleType : str, color : tuple):
+	global lavaParticles, runParticles, jumpParticles
+
+	if(particleType == "lava"):
+		for particle in lavaParticles:
+			particle[0][0] += particle[1][0]
+			particle[0][1] += particle[1][1]
+			particle[2] -= 0.1
+			pygame.draw.circle(engineWindow, color, [int(particle[0][0]), int(particle[0][1])], int(particle[2]))
+			if(particle[2] <= 0):
+				lavaParticles.remove(particle)
+
+	elif(particleType == "run"):
+		for particle in runParticles:
+			particle[0][0] += particle[1][0]
+			particle[0][1] += particle[1][1]
+			particle[2] -= 0.1
+			pygame.draw.circle(engineWindow, color, [int(particle[0][0]), int(particle[0][1])], int(particle[2]))
+			if(particle[2] <= 0):
+				runParticles.remove(particle)
+
+	elif(particleType == "jump"):
+		for particle in jumpParticles:
+			particle[0][0] += particle[1][0]
+			particle[0][1] += particle[1][1]
+			particle[2] -= 0.1
+			pygame.draw.circle(engineWindow, color, [int(particle[0][0]), int(particle[0][1])], int(particle[2]))
+			if(particle[2] <= 0):
+				jumpParticles.remove(particle)
+
+	else:
+		print(f"Cannot find {particleType} in the game particles list. The particle won't be displayed.")
 
 def loadNextLevel(worldData : list):
 	global level, state, maxLevels
@@ -345,11 +399,14 @@ class Player(pygame.sprite.Sprite):
 			if(pygame.key.get_pressed()[pygame.K_q]):
 				deltaX -= 5
 				self.direction = 1
+				addGameParticle("run", self.rect.x + 30, self.rect.y)
 			if(pygame.key.get_pressed()[pygame.K_d]):
 				deltaX += 5
 				self.direction = 0
+				addGameParticle("run", self.rect.x, self.rect.y)
 			if(pygame.key.get_pressed()[pygame.K_SPACE] and self.alreadyJumped == False and self.inAir == False):
 				jumpSound.play()
+				addGameParticle("jump", self.rect.x, self.rect.y)
 				self.velocityY = -18
 				self.alreadyJumped = True
 			if(pygame.key.get_pressed()[pygame.K_SPACE] == False):
@@ -415,6 +472,7 @@ class Player(pygame.sprite.Sprite):
 				self.image = pygame.transform.flip(self.image, self.direction, False)
 				self.image = pygame.transform.scale(self.image, ((64, 64)))
 				state = -1
+				addGameParticle("lava", self.rect.x, self.rect.y)
 
 			if(pygame.sprite.spritecollide(self, moneyGroup, True)):
 				state = 1
