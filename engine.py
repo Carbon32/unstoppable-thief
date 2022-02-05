@@ -40,7 +40,7 @@ platformGroup = pygame.sprite.Group() ; playersGroup = pygame.sprite.Group()
 
 # Particles:
 
-lavaParticles = [] ; runParticles = [] ; jumpParticles = []
+lavaParticles = [] ; runParticles = [] ; jumpParticles = [] ; enemyParticles = []
 
 # Engine Functions: #
 
@@ -51,7 +51,7 @@ def circleSurface(radius : int, color : tuple):
 	return surface
 
 def addGameParticle(particleType : str, x : int, y : int):
-	global lavaParticles, runParticles, jumpParticles
+	global lavaParticles, runParticles, jumpParticles, enemyParticles
 	particleType.lower()
 
 	if(particleType == "lava"):
@@ -60,6 +60,9 @@ def addGameParticle(particleType : str, x : int, y : int):
 	elif(particleType == "run"):
 		runParticles.append([[x + 10, y + 60], [random.randint(-4, 4), -1], random.randint(1, 3)])
 
+	elif(particleType == "enemy"):
+		enemyParticles.append([[x + 10, y + 65], [random.randint(-2, 2), -1], random.randint(1, 3)])
+
 	elif(particleType == "jump"):
 		jumpParticles.append([[x + 10, y + 60], [0, -2], random.randint(4, 6)])
 
@@ -67,7 +70,7 @@ def addGameParticle(particleType : str, x : int, y : int):
 		print(f"Cannot find {particleType} in the game particles list. The particle won't be displayed.")
 
 def drawGameParticles(engineWindow : pygame.Surface, particleType : str, color : tuple):
-	global lavaParticles, runParticles, jumpParticles
+	global lavaParticles, runParticles, jumpParticles, enemyParticles
 
 	if(particleType == "lava"):
 		for particle in lavaParticles:
@@ -88,6 +91,15 @@ def drawGameParticles(engineWindow : pygame.Surface, particleType : str, color :
 			pygame.draw.circle(engineWindow, color, [int(particle[0][0]), int(particle[0][1])], int(particle[2]))
 			if(particle[2] <= 0):
 				runParticles.remove(particle)
+
+	elif(particleType == "enemy"):
+		for particle in enemyParticles:
+			particle[0][0] += particle[1][0]
+			particle[0][1] += particle[1][1]
+			particle[2] -= 0.1
+			pygame.draw.circle(engineWindow, color, [int(particle[0][0]), int(particle[0][1])], int(particle[2]))
+			if(particle[2] <= 0):
+				enemyParticles.remove(particle)
 
 	elif(particleType == "jump"):
 		for particle in jumpParticles:
@@ -557,6 +569,12 @@ class Enemy(pygame.sprite.Sprite):
 
 	def update(self):
 		self.rect.x += self.movementDirection
+		if(self.movementDirection == 1):
+			addGameParticle("enemy", self.rect.centerx - 20, self.rect.y)
+
+		else:
+			addGameParticle("enemy", self.rect.centerx, self.rect.y)
+
 		self.movementCounter += 1
 		if abs((self.movementCounter > 50)):
 			self.movementDirection *= -1
@@ -591,7 +609,7 @@ class Coin(pygame.sprite.Sprite):
 	def __init__(self, x : int, y : int):
 		pygame.sprite.Sprite.__init__(self)
 		self.image = pygame.image.load('assets/Coins/coin.png').convert_alpha()
-		self.image = pygame.transform.scale(self.image, (tileSize // 2, tileSize // 2))
+		self.image = pygame.transform.scale(self.image, (tileSize - 20, tileSize - 20))
 		self.rect = self.image.get_rect()
 		self.rect.center = (x, y)
 
