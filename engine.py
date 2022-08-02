@@ -70,7 +70,7 @@ class Game():
 		pygame.display.set_icon(icon)
 
 	def startWindow(self):
-		self.display = pygame.display.set_mode((self.screenWidth, self.screenHeight))
+		self.display = pygame.display.set_mode((self.screenWidth, self.screenHeight), pygame.FULLSCREEN | pygame.DOUBLEBUF)
 		pygame.display.set_caption("Unstoppable Thief")
 		self.engineGravity = (self.screenWidth // 300) * 0.1
 		self.engineRunning = True
@@ -97,9 +97,9 @@ class Game():
 		self.coinsGroup.empty()
 		self.platformGroup.empty()
 
-	def updateGameSprites(self, world):
+	def updateGameSprites(self, world, particles):
 
-		self.player.update(world)
+		self.player.update(world, particles)
 
 	def drawGameSprites(self, world):
 
@@ -121,7 +121,12 @@ class Player(pygame.sprite.Sprite):
 
 		self.x = x
 		self.y = y
+		self.defaultSpeed = speed
 		self.speed = speed
+		self.health = 100
+		self.maxHealth = self.health
+		self.sprint = 500
+		self.maxSprint = self.sprint
 
 		# Player Movement Variables:
 
@@ -131,6 +136,7 @@ class Player(pygame.sprite.Sprite):
 		self.velocityY = 0
 		self.inAir = False
 		self.jump = False
+		self.sprinting = False
 
 		# Player Animation Variables:
 
@@ -168,21 +174,40 @@ class Player(pygame.sprite.Sprite):
 		self.rect = pygame.Rect(x, y, self.image.get_width() - self.game.screenWidth // 18, self.image.get_height() // 2)
 		self.rect.center = (x, y)
 
-	def update(self, world):
+	def update(self, world, particles):
+
+		if(pygame.key.get_pressed()[pygame.K_LSHIFT] and (self.moveRight or self.moveLeft)):
+
+			if(self.sprint > 0):
+
+				self.sprinting = True
+				self.sprint -= 2
+
+			else:
+
+				self.sprint = 0
+				self.sprinting = False
 
 		if(pygame.key.get_pressed()[pygame.K_d]):
 
 			self.moveRight = True
 			self.updateAction(1)
+			if(not self.inAir):
+				
+				particles.addGameParticle('run', self.rect.centerx, self.rect.bottom)
 
 		if(pygame.key.get_pressed()[pygame.K_q]):
 
 			self.moveLeft = True
 			self.updateAction(1)
+			if(not self.inAir):
+				
+				particles.addGameParticle('run', self.rect.centerx, self.rect.bottom)
 
 		if(pygame.key.get_pressed()[pygame.K_SPACE] and self.inAir == False):
 
 			self.jump = True
+			particles.addGameParticle('jump', self.rect.centerx, self.rect.bottom)
 
 		if(not pygame.key.get_pressed()[pygame.K_d]):
 
@@ -195,6 +220,14 @@ class Player(pygame.sprite.Sprite):
 		if(not pygame.key.get_pressed()[pygame.K_q] and not pygame.key.get_pressed()[pygame.K_d]):
 
 			self.updateAction(0)
+
+		if(not pygame.key.get_pressed()[pygame.K_LSHIFT]):
+
+			self.sprinting = False
+
+			if(not self.sprint == self.maxSprint):
+
+				self.sprint += 1
 
 		deltaX = 0
 		deltaY = 0
@@ -222,6 +255,14 @@ class Player(pygame.sprite.Sprite):
 
 			self.jump = False
 			self.inAir = True
+
+		if(self.sprinting):
+
+			self.speed = self.defaultSpeed * 1.5
+
+		if(not self.sprinting):
+
+			self.speed = self.defaultSpeed
 
 		if(self.inAir):
 
@@ -266,7 +307,13 @@ class Player(pygame.sprite.Sprite):
 
 		if(self.moveLeft or self.moveRight):
 
-			animTime = 80
+			if(self.sprinting):
+
+				animTime = 60
+
+			else:
+
+				animTime = 80
 
 		else:
 
@@ -300,6 +347,17 @@ class Player(pygame.sprite.Sprite):
 	def render(self):
 		self.game.display.blit(pygame.transform.flip(self.image, self.flip, False), (self.rect.x - self.xcollision, self.rect.y - self.ycollision))
 
+		# Health Bar:
+
+		pygame.draw.rect(self.game.display, (250, 0, 0), (self.game.screenWidth // 7, (self.game.screenHeight // 4 - self.game.screenHeight // 4.3), (self.rect.w * 3), self.game.screenWidth // 80))
+		pygame.draw.rect(self.game.display, (0, 250, 0), (self.game.screenWidth // 7, (self.game.screenHeight // 4 - self.game.screenHeight // 4.3), (self.rect.w * 3) * (self.health / self.maxHealth), self.game.screenWidth // 80))
+		pygame.draw.rect(self.game.display, (255, 255, 255), (self.game.screenWidth // 7, (self.game.screenHeight // 4 - self.game.screenHeight // 4.3),(self.rect.w * 3), self.game.screenWidth // 80), 2)
+
+		# Sprint Bar:
+
+		pygame.draw.rect(self.game.display, (30,144,255), (self.game.screenWidth // 3, (self.game.screenHeight // 4 - self.game.screenHeight // 4.3), (self.rect.w * 3), self.game.screenWidth // 80))
+		pygame.draw.rect(self.game.display, (173,216,230), (self.game.screenWidth // 3, (self.game.screenHeight // 4 - self.game.screenHeight // 4.3), (self.rect.w * 3) * (self.sprint / self.maxSprint), self.game.screenWidth // 80))
+		pygame.draw.rect(self.game.display, (255, 255, 255), (self.game.screenWidth // 3, (self.game.screenHeight // 4 - self.game.screenHeight // 4.3),(self.rect.w * 3), self.game.screenWidth // 80), 2)
 
 # World: #
 
@@ -390,7 +448,7 @@ class World():
 
 					if(t == 2):
 
-						self.game.player = Player(self.game, tileRect.x, tileRect.y, 6)
+						self.game.player = Player(self.game, tileRect.x, tileRect.y, self.game.screenWidth // 300)
 
 	def render(self):
 		for tile in self.obstacleList:
@@ -410,6 +468,86 @@ class Menu():
 
 		self.mainMenu = True
 
+# Resolution: #
+
+class Resolution():
+	def __init__(self, game):
+		
+		# Game: 
+
+		self.game = game
+
+		# Display:
+
+		self.resolutionWindow = pygame.display.set_mode((300, 400))
+		pygame.display.set_caption("Unstoppable Thief: ")
+		pygame.display.set_icon(loadGameImage('assets/icon.png', 32, 32))
+		self.resolutionStatus = True
+
+		# Background:
+
+		self.background = loadGameImage('assets/menu.png', 300, 400)
+
+		# Buttons: 
+
+		self.resolutionA = Button(self.resolutionWindow, 80, 200, loadGameImage('assets/Resolution/B.png', 150, 100)) # 1280 x 720
+		self.resolutionB = Button(self.resolutionWindow, 80, 50, loadGameImage('assets/Resolution/A.png', 150, 100)) # 1920 x 1080
+
+	def updateBackground(self):
+		self.resolutionWindow.fill((255, 255, 255))
+		self.resolutionWindow.blit(self.background, (0, 0))
+
+	def setResolution(self, screenWidth : int, screenHeight : int):
+		self.game.screenWidth = screenWidth
+		self.game.screenHeight = screenHeight
+		self.resolutionStatus = False
+
+
+	def updateWindow(self):
+		for event in pygame.event.get():
+
+			if(event.type == pygame.QUIT):
+
+				self.resolutionStatus = False
+				exit()
+
+		pygame.display.update()
+
+# Button: #
+
+class Button():
+	def __init__(self, display : pygame.Surface, x : int, y : int, image : pygame.Surface):
+		self.display = display
+		self.image = image
+		self.rect = self.image.get_rect()
+		self.rect.topleft = (x, y)
+		self.clicked = False
+		self.buttonCooldown = 100
+		self.buttonTimer = pygame.time.get_ticks()
+
+	def render(self):
+		action = False
+		position = pygame.mouse.get_pos()
+		if self.rect.collidepoint(position):
+
+			if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
+
+				if(pygame.time.get_ticks() - self.buttonTimer >= self.buttonCooldown):
+
+					action = True
+					self.clicked = True
+					self.buttonTimer = pygame.time.get_ticks()
+			
+		if pygame.mouse.get_pressed()[0] == 0:
+
+			self.clicked = False
+
+		self.display.blit(self.image, (self.rect.x, self.rect.y))
+		return action
+
+	def changeButton(self, image : pygame.Surface):
+
+		self.image = image
 
 # Particles: #
 
@@ -427,31 +565,31 @@ class Particles():
 		self.jumpParticles = []
 
 
-	def circleSurface(radius : int, color : tuple):
+	def circleSurface(self, radius : int, color : tuple):
 		surface = pygame.Surface((radius * 2, radius * 2))
 		pygame.draw.circle(surface, color, (radius, radius), radius)
 		surface.set_colorkey((0, 0, 0))
 		return surface
 
-	def addGameParticle(particleType : str, x : int, y : int):
+	def addGameParticle(self, particleType : str, x : int, y : int):
 		particleType.lower()
 
 		if(particleType == "lava"):
-			self.burnParticles.append([[x + 20, y + 30], [0, -3], random.randint(12, 18)])
+			self.burnParticles.append([[x, y], [0, -3], random.randint(12, 18)])
 
 		elif(particleType == "run"):
-			self.runParticles.append([[x + 10, y + 60], [random.randint(-4, 4), -1], random.randint(1, 3)])
+			self.runParticles.append([[x + random.randint(-self.game.screenWidth // 80, self.game.screenWidth // 80), y], [random.randint(-4, 4), -0.5], random.randint(self.game.screenWidth // 1024, self.game.screenWidth // 512)])
 
 		elif(particleType == "enemy"):
-			self.runParticles.append([[x + 10, y + 65], [random.randint(-2, 2), -1], random.randint(1, 3)])
+			self.runParticles.append([[x, y], [random.randint(-2, 2), -1], random.randint(1, 3)])
 
 		elif(particleType == "jump"):
-			self.jumpParticles.append([[x + 10, y + 60], [0, -2], random.randint(4, 6)])
+			self.jumpParticles.append([[x, y], [0, -2], random.randint(self.game.screenWidth // 128, self.game.screenWidth // 128)])
 
 		else:
 			print(f"Cannot find {particleType} in the game particles list. The particle won't be displayed.")
 
-	def drawGameParticles(particleType : str, color : tuple):
+	def drawGameParticles(self, particleType : str, color : tuple):
 
 		if(particleType == "lava"):
 			for particle in self.burnParticles:
@@ -468,7 +606,7 @@ class Particles():
 			for particle in self.runParticles:
 				particle[0][0] += particle[1][0]
 				particle[0][1] += particle[1][1]
-				particle[2] -= 0.1
+				particle[2] -= 0.05
 				pygame.draw.circle(self.game.display, color, [int(particle[0][0]), int(particle[0][1])], int(particle[2]))
 				if(particle[2] <= 0):
 					self.runParticles.remove(particle)
@@ -493,3 +631,8 @@ class Particles():
 
 		else:
 			print(f"Cannot find {particleType} in the game particles list. The particle won't be displayed.")
+
+	def drawParticles(self):
+
+		self.drawGameParticles("run", (255, 255, 255))
+		self.drawGameParticles("jump", (160, 82, 45))
