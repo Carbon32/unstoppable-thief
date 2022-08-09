@@ -253,7 +253,7 @@ class Player(pygame.sprite.Sprite):
 
 		# Loading Sprites:
 
-		animationTypes = ['Idle', 'Move', 'Jump']
+		animationTypes = ['Idle', 'Move', 'Jump', 'Crack']
 		for animation in animationTypes:
 
 			tempList = []
@@ -330,6 +330,12 @@ class Player(pygame.sprite.Sprite):
 
 		deltaX = 0
 		deltaY = 0
+
+		if(self.interacting):
+
+			self.moveLeft = False
+			self.moveRight = False
+			self.updateAction(3)
 
 		if(self.moveLeft):
 
