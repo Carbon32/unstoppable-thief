@@ -416,6 +416,10 @@ class Player(pygame.sprite.Sprite):
 
 					self.game.level += 1
 
+				self.money = 0
+				self.key = False
+				self.game.seconds = [0, 0]
+				self.game.minutes = [0, 0]
 				world.setGameLevel(self.game.level)
 				self.rect.x, self.rect.y = self.game.screenWidth // 10, self.game.screenHeight - (self.game.screenHeight // 8)
 
