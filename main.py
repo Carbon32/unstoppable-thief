@@ -48,9 +48,13 @@ game.setGameIcon('assets/Player/Move/0.png')
 
 assetsManager = AssetsManager(game)
 
+# User Interface: #
+
+ui = UserInterface(game, assetsManager)
+
 # World: #
 
-world = World(game)
+world = World(game, assetsManager)
 
 # Menu: #
 
@@ -68,10 +72,6 @@ particles = Particles(game)
 
 world.loadTiles()
 editor.loadTiles()
-
-# Generate World: 
-
-world.setGameLevel(game.level)
 
 # Fade In:
 
@@ -103,7 +103,7 @@ while(game.engineRunning):
 				editor.handleEditor()
 		else:
 
-			game.drawGameSprites(world)
+			game.drawGameSprites(world, ui)
 			particles.drawParticles()
 			game.updateGameSprites(world, particles)
 
@@ -112,4 +112,4 @@ while(game.engineRunning):
 				game.startGame()
 
 	game.updateDisplay(60)
-	print(game.fpsHandler.get_fps())
+	#print(game.fpsHandler.get_fps())

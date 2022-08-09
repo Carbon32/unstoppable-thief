@@ -57,6 +57,10 @@ class Game():
 
 		self.editorStatus = False
 
+		# Level Selector:
+
+		self.levelSelector = True
+
 		# Menu Status:
 
 		self.menuOn = True
@@ -68,15 +72,28 @@ class Game():
 		# Sprite Groups:
 
 		self.enemyGroup = pygame.sprite.Group()
-		self.lavaGroup = pygame.sprite.Group()
+		self.moneyGroup = pygame.sprite.Group()
+		self.safesGroup = pygame.sprite.Group()
+		self.keysGroup = pygame.sprite.Group()
 		self.exitGroup = pygame.sprite.Group()
-		self.coinsGroup = pygame.sprite.Group()
-		self.platformGroup = pygame.sprite.Group()
 		self.objectsGroup = pygame.sprite.Group()
+		self.cameraGroup = pygame.sprite.Group()
+
+		# Timer:
+
+		self.changeTime = False
+		self.timeUpdate = pygame.time.get_ticks()
+		self.seconds = [0, 0]
+		self.minutes = [0, 0]
+
+		# Cracking Progress:
+
+		self.progress = 0
 
 	def startGame(self):
 
 		self.gameReady = True
+		self.changeTime = True
 
 	def setGameIcon(self, path : str):
 		icon = pygame.image.load(path)
@@ -92,6 +109,24 @@ class Game():
 	def updateDisplay(self, fps : int):
 		self.fpsHandler.tick(fps)
 
+		if(self.changeTime):
+			if(pygame.time.get_ticks() - self.timeUpdate > 1):
+				self.seconds[1] += 1
+				if(self.seconds[1] == 9 and self.seconds[0] != 5):
+					self.seconds[0] += 1
+					self.seconds[1] = 0
+
+				if(self.seconds[0] == 5 and self.seconds[1] == 9):
+					self.minutes[1] += 1
+					self.seconds[0] = 0
+					self.seconds[1] = 0
+
+				if(self.minutes[1] == 9):
+					self.minutes[0] += 1
+					self.minutes[1] = 0
+
+			self.timeUpdate = pygame.time.get_ticks()
+
 		for event in pygame.event.get():
 			if(event.type == pygame.QUIT):
 				self.engineRunning = False
@@ -106,22 +141,61 @@ class Game():
 
 	def removeAllSprites(self):
 		self.enemyGroup.empty()
-		self.lavaGroup.empty()
+		self.moneyGroup.empty()
+		self.safesGroup.empty()
+		self.keysGroup.empty()
 		self.exitGroup.empty()
-		self.coinsGroup.empty()
-		self.platformGroup.empty()
+		self.objectsGroup.empty()
+		self.cameraGroup.empty()
 
 	def updateGameSprites(self, world, particles):
 
 		self.player.update(world, particles)
 
-	def drawGameSprites(self, world):
+		for money in self.moneyGroup:
+
+			money.update()
+
+		for safe in self.safesGroup:
+
+			safe.update()
+
+		for key in self.keysGroup:
+
+			key.update()
+
+		for camera in self.cameraGroup:
+
+			camera.update()
+
+	def drawGameSprites(self, world, ui):
 
 			for object in self.objectsGroup:
 
 				object.draw()
 
+			for money in self.moneyGroup:
+
+				money.draw()
+
+			for safe in self.safesGroup:
+
+				safe.draw()
+
+			for key in self.keysGroup:
+
+				key.draw()
+
+			for camera in self.cameraGroup:
+
+				camera.draw()
+
+			for exit in self.exitGroup:
+
+				exit.draw()
+
 			world.render()
+			ui.drawStats()
 			self.player.render()
 
 # Player: #
@@ -144,6 +218,12 @@ class Player(pygame.sprite.Sprite):
 		self.maxHealth = self.health
 		self.sprint = 500
 		self.maxSprint = self.sprint
+		self.interacting = False
+
+		# Player Items:
+
+		self.money = 0
+		self.key = False
 
 		# Player Movement Variables:
 
@@ -194,39 +274,39 @@ class Player(pygame.sprite.Sprite):
 	def update(self, world, particles):
 
 		if(self.game.gameReady):
+			if(not self.interacting):
+				if(pygame.key.get_pressed()[pygame.K_LSHIFT] and (self.moveRight or self.moveLeft)):
 
-			if(pygame.key.get_pressed()[pygame.K_LSHIFT] and (self.moveRight or self.moveLeft)):
+					if(self.sprint > 0):
 
-				if(self.sprint > 0):
+						self.sprinting = True
+						self.sprint -= 2
 
-					self.sprinting = True
-					self.sprint -= 2
+					else:
 
-				else:
+						self.sprint = 0
+						self.sprinting = False
 
-					self.sprint = 0
-					self.sprinting = False
+				if(pygame.key.get_pressed()[pygame.K_d]):
 
-			if(pygame.key.get_pressed()[pygame.K_d]):
+					self.moveRight = True
+					self.updateAction(1)
+					if(not self.inAir):
+						
+						particles.addGameParticle('run', self.rect.centerx, self.rect.bottom)
 
-				self.moveRight = True
-				self.updateAction(1)
-				if(not self.inAir):
-					
-					particles.addGameParticle('run', self.rect.centerx, self.rect.bottom)
+				if(pygame.key.get_pressed()[pygame.K_q]):
 
-			if(pygame.key.get_pressed()[pygame.K_q]):
+					self.moveLeft = True
+					self.updateAction(1)
+					if(not self.inAir):
+						
+						particles.addGameParticle('run', self.rect.centerx, self.rect.bottom)
 
-				self.moveLeft = True
-				self.updateAction(1)
-				if(not self.inAir):
-					
-					particles.addGameParticle('run', self.rect.centerx, self.rect.bottom)
+				if(pygame.key.get_pressed()[pygame.K_SPACE] and self.inAir == False):
 
-			if(pygame.key.get_pressed()[pygame.K_SPACE] and self.inAir == False):
-
-				self.jump = True
-				particles.addGameParticle('jump', self.rect.centerx, self.rect.bottom)
+					self.jump = True
+					particles.addGameParticle('jump', self.rect.centerx, self.rect.bottom)
 
 		if(not pygame.key.get_pressed()[pygame.K_d]):
 
@@ -318,6 +398,21 @@ class Player(pygame.sprite.Sprite):
 				
 			deltaX = 0
 
+		if(pygame.sprite.spritecollide(self, self.game.exitGroup, False)):
+
+			if(self.key):
+
+				if(self.game.level == 3):
+
+					self.game.level = 1
+
+				else:
+
+					self.game.level += 1
+
+				world.setGameLevel(self.game.level)
+				self.rect.x, self.rect.y = self.game.screenWidth // 10, self.game.screenHeight - (self.game.screenHeight // 8)
+
 		self.rect.x += deltaX
 		self.rect.y += deltaY
 		self.updateAnimation()
@@ -381,11 +476,15 @@ class Player(pygame.sprite.Sprite):
 # World: #
 
 class World():
-	def __init__(self, game):
+	def __init__(self, game, assetsManager):
 
 		# Game:
 
 		self.game = game
+
+		# Assets Manager:
+
+		self.assetsManager =  assetsManager
 
 		# Level Settings:
 
@@ -422,7 +521,7 @@ class World():
 
 		# Load a new level:
 
-		with open(f'levels/level{self.game.level}.csv', newline='') as csvfile:
+		with open(f'levels/level{level}.csv', newline='') as csvfile:
 
 			reader = csv.reader(csvfile, delimiter=',')
 
@@ -464,10 +563,35 @@ class World():
 
 						self.obstacleList.append(tileData)
 
-					if(t >= 11 and t <= 80):
+					if(t >= 11 and t <= 75):
 
 						object = Object(self.game, self.tileSize, tile, x * self.tileSize, (y * self.tileSize))
 						self.game.objectsGroup.add(object)
+
+					if(t == 76):
+
+						exit = Object(self.game, self.tileSize, tile, x * self.tileSize, (y * self.tileSize))
+						self.game.exitGroup.add(exit)
+
+					if(t == 77):
+
+						safe = Safe(self.game, self.tileSize, self.assetsManager, x * self.tileSize, (y * self.tileSize))
+						self.game.safesGroup.add(safe)
+
+					if(t == 78):
+
+						money = Money(self.game, self.tileSize, self.assetsManager, x * self.tileSize, (y * self.tileSize))
+						self.game.moneyGroup.add(money)
+
+					if(t == 79):
+
+						key = Key(self.game, self.tileSize, self.assetsManager, x * self.tileSize, (y * self.tileSize))
+						self.game.keysGroup.add(key)
+
+					if(t == 80):
+
+						camera = Camera(self.game, self.tileSize, self.assetsManager, x * self.tileSize, (y * self.tileSize))
+						self.game.cameraGroup.add(camera)
 
 	def render(self):
 		for tile in self.obstacleList:
@@ -493,10 +617,197 @@ class Object(pygame.sprite.Sprite):
 		self.image = image
 		self.rect = self.image.get_rect()
 		self.rect.midtop = (x + self.tileSize // 2, y + (self.tileSize - self.image.get_height()))
-		self.rect.h = 1
 
 	def draw(self):
 		self.game.display.blit(self.image, self.rect)
+
+# Camera: #
+
+class Camera(pygame.sprite.Sprite):
+	def __init__(self, game, tileSize, assetsManager, x : int, y : int):
+		pygame.sprite.Sprite.__init__(self)
+
+		# Game: 
+
+		self.game = game
+
+		# Assets Manager:
+
+		self.assetsManager = assetsManager
+
+		# World: 
+
+		self.tileSize = tileSize
+
+		self.image = self.assetsManager.camera["Camera1"]
+		self.rect = self.image.get_rect()
+		self.rect.midtop = (x + self.tileSize // 2, y + (self.tileSize - self.image.get_height()))
+
+	def draw(self):
+		self.game.display.blit(self.image, self.rect)
+
+# Money: #
+
+class Money(pygame.sprite.Sprite):
+	def __init__(self, game, tileSize, assetsManager, x : int, y : int):
+		pygame.sprite.Sprite.__init__(self)
+
+		# Game: 
+
+		self.game = game
+
+		# Assets Manager:
+
+		self.assetsManager = assetsManager
+
+		# World: 
+
+		self.tileSize = tileSize
+
+		# Status:
+
+		self.status = True
+
+		# Image & Rectangle:
+
+		self.image = self.assetsManager.items["Money"]
+		self.rect = self.image.get_rect()
+		self.rect.midtop = (x + self.tileSize // 2, y + (self.tileSize - self.image.get_height()))
+
+	def draw(self):
+		self.game.display.blit(self.image, self.rect)
+
+	def update(self):
+
+		if(self.status):
+			if(pygame.sprite.collide_rect(self, self.game.player)):
+
+				self.image = self.assetsManager.items["MoneyShining"]
+				if(pygame.key.get_pressed()[pygame.K_f]):
+					self.image = self.assetsManager.walls["Upper"]
+					self.game.player.money += 100
+					self.status = False
+
+			else:
+
+				self.image = self.assetsManager.items["Money"]
+
+# Safe: #
+
+class Safe(pygame.sprite.Sprite):
+	def __init__(self, game, tileSize, assetsManager, x : int, y : int):
+		pygame.sprite.Sprite.__init__(self)
+
+		# Game: 
+
+		self.game = game
+
+		# Assets Manager:
+
+		self.assetsManager = assetsManager
+
+		# World: 
+
+		self.tileSize = tileSize
+
+		# Status:
+
+		self.status = True
+
+		# Image & Rectangle:
+
+		self.image = self.assetsManager.items["Safe"]
+		self.rect = self.image.get_rect()
+		self.rect.midtop = (x + self.tileSize // 2, y + (self.tileSize - self.image.get_height()))
+
+		# Timers:
+
+		self.currentTime = pygame.time.get_ticks()
+		self.crackingTime = 25
+
+	def draw(self):
+		self.game.display.blit(self.image, self.rect)
+
+	def update(self):
+
+		if(self.status):
+			if(pygame.sprite.collide_rect(self, self.game.player)):
+
+				self.image = self.assetsManager.items["SafeShining"]
+
+				if(not self.game.player.interacting):
+					if(pygame.key.get_pressed()[pygame.K_f]):
+						self.game.player.interacting = True
+
+			else:
+
+				self.image = self.assetsManager.items["Safe"]
+
+		if(self.game.player.interacting):
+
+			pygame.draw.rect(self.game.display, (90, 144, 255), (self.game.player.rect.x - self.game.player.rect.w // 2, self.game.player.rect.top - self.game.player.rect.h // 2.8, (self.rect.w), self.game.screenWidth // 256))
+			pygame.draw.rect(self.game.display, (255, 40, 80), (self.game.player.rect.x - self.game.player.rect.w // 2, self.game.player.rect.top - self.game.player.rect.h // 2.8, (self.rect.w) * (self.game.progress / 100), self.game.screenWidth // 256))
+			pygame.draw.rect(self.game.display, (255, 255, 255), (self.game.player.rect.x - self.game.player.rect.w // 2, self.game.player.rect.top - self.game.player.rect.h // 2.8,(self.rect.w), self.game.screenWidth // 256), 2)
+
+			if(self.game.progress < 100):
+
+				if(pygame.time.get_ticks() - self.currentTime > self.crackingTime):
+
+					self.game.progress += 1
+					self.currentTime = pygame.time.get_ticks()
+
+			else:
+
+				self.image = self.assetsManager.items["SafeOpen"]
+				self.game.player.interacting = False
+				self.game.player.money += 500
+				self.game.progress = 0
+				self.status = False
+# Key: #
+
+class Key(pygame.sprite.Sprite):
+	def __init__(self, game, tileSize, assetsManager, x : int, y : int):
+		pygame.sprite.Sprite.__init__(self)
+
+		# Game: 
+
+		self.game = game
+
+		# Assets Manager:
+
+		self.assetsManager = assetsManager
+
+		# World: 
+
+		self.tileSize = tileSize
+
+		# Status:
+
+		self.status = True
+
+		# Image & Rectangle:
+
+		self.image = self.assetsManager.items["Key"]
+		self.rect = self.image.get_rect()
+		self.rect.midtop = (x + self.tileSize // 2, y + (self.tileSize - self.image.get_height()))
+
+	def draw(self):
+		self.game.display.blit(self.image, self.rect)
+
+	def update(self):
+
+		if(self.status):
+			if(pygame.sprite.collide_rect(self, self.game.player)):
+
+				self.image = self.assetsManager.items["KeyShining"]
+				if(pygame.key.get_pressed()[pygame.K_f]):
+					self.image = self.assetsManager.walls["Upper"]
+					self.game.player.key = True
+					self.status = False
+
+			else:
+
+				self.image = self.assetsManager.items["Key"]
 
 # Menu:
 
@@ -519,12 +830,30 @@ class Menu():
 
 		self.mainMenu = True
 
+		# Level Selector:
+
+		self.selectedLevel = 0
+
+		# Level Designs:
+
+		self.levelDesigns = []
+		for i in range(len(os.listdir('assets/Levels/'))):
+			self.levelDesigns.append(loadGameImage(f'assets/Levels/Level{i}.png', self.game.screenWidth // 2, self.game.screenHeight // 2))
+
+		# Border:
+
+		self.border = pygame.Rect(0, 0, 0, 0)
+
 		# Buttons:
 
 		self.playButton = Button(self.game.display, self.game.screenWidth // 2 - (self.game.screenWidth // 14), self.game.screenHeight // 2 - (self.game.screenHeight // 3), self.assetsManager.buttons["Play"])
 		self.editorButton = Button(self.game.display, self.game.screenWidth // 2 - (self.game.screenWidth // 14), self.game.screenHeight // 2 - (self.game.screenHeight // 6), self.assetsManager.buttons["Editor"])
 		self.exitButton = Button(self.game.display, self.game.screenWidth // 2 - (self.game.screenWidth // 14), self.game.screenHeight // 6 + (self.game.screenHeight // 3), self.assetsManager.buttons["Exit"])
-
+		self.selectButton = Button(self.game.display, self.game.screenWidth // 4 + (self.game.screenWidth // 4), self.game.screenHeight // 2 + (self.game.screenHeight // 4), self.assetsManager.buttons["Select"])
+		self.level1 = Button(self.game.display, self.game.screenWidth // 10, self.game.screenHeight // 2 - (self.game.screenWidth // 4), self.assetsManager.buttons["Lvl1"])
+		self.level2 = Button(self.game.display, self.game.screenWidth // 10, self.game.screenHeight // 2 - (self.game.screenWidth // 6), self.assetsManager.buttons["Lvl2"])
+		self.level3 = Button(self.game.display, self.game.screenWidth // 10, self.game.screenHeight // 2 - (self.game.screenWidth // 12), self.assetsManager.buttons["Lvl3"])
+		
 	def handleMenu(self):
 
 		if(self.game.menuOn):
@@ -536,11 +865,11 @@ class Menu():
 				if(self.playButton.render()):
 
 					self.mainMenu = False
-					self.game.menuOn = False
 
 				if(self.editorButton.render()):
 
 					self.world.setGameLevel(self.game.level)
+					self.game.levelSelector = False
 					self.game.editorStatus = True
 					self.game.menuOn = False
 					self.mainMenu = False
@@ -548,6 +877,40 @@ class Menu():
 				if(self.exitButton.render()):
 
 					self.game.engineRunning = False
+
+			else:
+
+				if(self.game.levelSelector):
+
+					if(self.level1.render()):
+						self.selectedLevel = 1
+						self.border = pygame.Rect(self.game.screenWidth // 10, self.game.screenHeight // 2 - (self.game.screenWidth // 4), self.game.screenWidth // 8, self.game.screenWidth // 16)
+
+					if(self.level2.render()):
+						self.selectedLevel = 2
+						self.border = pygame.Rect(self.game.screenWidth // 10, self.game.screenHeight // 2 - (self.game.screenWidth // 6), self.game.screenWidth // 8, self.game.screenWidth // 16)
+
+					if(self.level3.render()):
+						self.selectedLevel = 3
+						self.border = pygame.Rect(self.game.screenWidth // 10, self.game.screenHeight // 2 - (self.game.screenWidth // 12), self.game.screenWidth // 8, self.game.screenWidth // 16)
+
+					if(self.selectButton.render() and self.selectedLevel != 0):
+						self.world.setGameLevel(self.selectedLevel)
+						self.game.levelSelector = False
+						self.game.menuOn = False
+						self.game.musicStarted = False
+
+				if(self.selectedLevel > len(self.levelDesigns) - 1):
+
+					self.game.display.blit(self.levelDesigns[0], (self.game.screenWidth // 3, self.game.screenHeight // 6))
+
+				else:
+
+					self.game.display.blit(self.levelDesigns[self.selectedLevel], (self.game.screenWidth // 3, self.game.screenHeight // 6))
+
+				pygame.draw.rect(self.game.display, (0, 0, 0), pygame.Rect(self.game.screenWidth // 3, self.game.screenHeight // 6, self.game.screenWidth // 2, self.game.screenHeight // 2), self.game.screenWidth // 128)
+				pygame.draw.rect(self.game.display, (150, 255, 0), self.border, self.game.screenWidth // 128)
+
 
 # Assets Manager: 
 
@@ -558,6 +921,37 @@ class AssetsManager():
 
 		self.game = game
 
+		# Camera:
+
+		self.camera = {
+			"Camera1" : loadGameImage('assets/Camera/Camera_Left.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
+			"Camera2" : loadGameImage('assets/Camera/Camera_Front.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
+			"Camera3" : loadGameImage('assets/Camera/Camera_Right.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
+
+		}
+
+		# Items:
+
+		self.items = {
+			"Money" : loadGameImage('assets/Money/Money.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
+			"MoneyShining" : loadGameImage('assets/Money/Money_Shining.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
+			"UIMoney" : loadGameImage('assets/Money/UIMoney.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
+			"Key" : loadGameImage('assets/Key/Key.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
+			"KeyShining" : loadGameImage('assets/Key/Key_Shining.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
+			"UIKey" : loadGameImage('assets/Key/UIKey.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
+			"Safe" : loadGameImage('assets/Safe/Safe.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
+			"SafeShining" : loadGameImage('assets/Safe/Safe_Shining.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
+			"SafeOpen" : loadGameImage('assets/Safe/Safe_Open.png', self.game.screenWidth // 32, self.game.screenWidth // 32)
+		}
+
+		# Walls:
+
+		self.walls = {
+			"Upper" : loadGameImage('assets/Walls/Upper.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
+			"Lower" : loadGameImage('assets/Walls/Lower.png', self.game.screenWidth // 32, self.game.screenWidth // 32)
+
+		}
+
 		# Buttons:
 
 		self.buttons = {
@@ -565,14 +959,14 @@ class AssetsManager():
 			"Editor" : loadGameImage('assets/Buttons/Editor.png', self.game.screenWidth // 6, self.game.screenWidth // 12),
 			"Exit" : loadGameImage('assets/Buttons/Exit.png', self.game.screenWidth // 6, self.game.screenWidth // 12),
 			"Again" : loadGameImage('assets/Buttons/Again.png', self.game.screenWidth // 6, self.game.screenWidth // 12),
-			"Select" : loadGameImage('assets/Buttons/select.png', self.game.screenWidth // 6, self.game.screenWidth // 12),
+			"Select" : loadGameImage('assets/Buttons/Select.png', self.game.screenWidth // 6, self.game.screenWidth // 12),
 			"Save" : loadGameImage('assets/Buttons/Save.png', self.game.screenWidth // 12, self.game.screenWidth // 24),
 			"Clear" : loadGameImage('assets/Buttons/Clear.png', self.game.screenWidth // 12, self.game.screenWidth // 24),
 			"Back" : loadGameImage('assets/Buttons/Back.png', self.game.screenWidth // 12, self.game.screenWidth // 24),
-			"MusicOn" : loadGameImage('assets/Buttons/musicOn.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
-			"MusicOff" : loadGameImage('assets/Buttons/musicOff.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
-			"SoundOn" : loadGameImage('assets/Buttons/soundOn.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
-			"SoundOff" : loadGameImage('assets/Buttons/soundOff.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
+			"MusicOn" : loadGameImage('assets/Buttons/MusicOn.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
+			"MusicOff" : loadGameImage('assets/Buttons/MusicOff.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
+			"SoundOn" : loadGameImage('assets/Buttons/SoundOn.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
+			"SoundOff" : loadGameImage('assets/Buttons/SoundOff.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
 			"Lvl1" : loadGameImage('assets/Buttons/Lvl_1.png', self.game.screenWidth // 8, self.game.screenWidth // 16),
 			"Lvl2" : loadGameImage('assets/Buttons/Lvl_2.png', self.game.screenWidth // 8, self.game.screenWidth // 16),
 			"Lvl3" : loadGameImage('assets/Buttons/Lvl_3.png', self.game.screenWidth // 8, self.game.screenWidth // 16),
@@ -594,12 +988,12 @@ class Resolution():
 
 		self.resolutionWindow = pygame.display.set_mode((300, 400))
 		pygame.display.set_caption("Unstoppable Thief: ")
-		pygame.display.set_icon(loadGameImage('assets/icon.png', 32, 32))
+		pygame.display.set_icon(loadGameImage('assets/Icon.png', 32, 32))
 		self.resolutionStatus = True
 
 		# Background:
 
-		self.background = loadGameImage('assets/menu.png', 300, 400)
+		self.background = loadGameImage('assets/Menu.png', 300, 400)
 
 		# Buttons: 
 
@@ -749,6 +1143,38 @@ class Particles():
 
 		self.drawGameParticles("run", (255, 255, 255))
 		self.drawGameParticles("jump", (160, 82, 45))
+
+# User Interface: #
+
+class UserInterface():
+	def __init__(self, game, assetsManager):
+		
+		# Game:
+
+		self.game = game
+
+		# Assets Manager:
+
+		self.assetsManager = assetsManager
+
+	def drawStats(self):
+
+		if(self.game.player.money < 1000):
+
+			drawText(self.game.display, f'Money: ${self.game.player.money}', self.game.screenWidth // 64, (255, 255, 255), self.game.screenWidth // 32, (self.game.screenHeight // 4 - self.game.screenHeight // 4.4))
+
+		else:
+
+			drawText(self.game.display, f'Money: ${self.game.player.money / 1000}K', self.game.screenWidth // 64, (255, 255, 255), self.game.screenWidth // 32, (self.game.screenHeight // 4 - self.game.screenHeight // 4.4))
+
+		drawText(self.game.display, f'Level: {self.game.level}', self.game.screenWidth // 64, (255, 255, 255), self.game.screenWidth // 4, (self.game.screenHeight // 4 - self.game.screenHeight // 4.4))
+		drawText(self.game.display, f'FPS: {int(self.game.fpsHandler.get_fps())}', self.game.screenWidth // 64, (255, 255, 255), self.game.screenWidth // 2, (self.game.screenHeight // 4 - self.game.screenHeight // 4.4))
+		drawText(self.game.display, f'Time: {self.game.minutes[0]}{self.game.minutes[1]}:{self.game.seconds[0]}{self.game.seconds[1]}', self.game.screenWidth // 64, (255, 255, 255), self.game.screenWidth - (self.game.screenWidth // 3), (self.game.screenHeight // 4 - self.game.screenHeight // 4.4))
+		self.game.display.blit(self.assetsManager.items["UIMoney"], (0, (self.game.screenHeight // 4 - self.game.screenHeight // 3.85)))
+
+		if(self.game.player.key):
+
+			self.game.display.blit(self.assetsManager.items["UIKey"], (self.game.screenWidth - (self.game.screenWidth // 6), (self.game.screenHeight // 4 - self.game.screenHeight // 4)))
 
 # Editor: #
 
@@ -911,7 +1337,7 @@ class Editor():
 			self.menu.mainMenu = True
 			self.game.menuOn = True
 			self.game.editorStatus = False
-			self.world.setGameLevel(self.game.level)
+			self.game.levelSelector = True
 
 	def handleEditor(self):
 
@@ -921,11 +1347,13 @@ class Editor():
 
 		if(pygame.key.get_pressed()[pygame.K_z]):
 
-			if(pygame.time.get_ticks() - self.changeTimer > 200 and self.game.level < 2):
+			if(pygame.time.get_ticks() - self.changeTimer > 200 and self.game.level < 3):
 
+				print(self.game.level)
 				self.game.level += 1
 				self.unsaved = False
 				self.loadNewLevel()
+				self.changeTimer = pygame.time.get_ticks()
 
 		if(pygame.key.get_pressed()[pygame.K_s]):
 
@@ -934,6 +1362,7 @@ class Editor():
 				self.game.level -= 1
 				self.unsaved = False
 				self.loadNewLevel()
+				self.changeTimer = pygame.time.get_ticks()
 
 		if(position[0] < self.game.screenWidth and position[1] < self.game.screenHeight):
 
