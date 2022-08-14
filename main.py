@@ -36,9 +36,13 @@ while(resolution.resolutionStatus):
 
     resolution.updateWindow()
 
+# Sounds: #
+
+sounds = Sounds()
+
 # Game Window: #
 
-game.startWindow()
+game.startWindow(sounds)
 
 # Game Icon: #
 

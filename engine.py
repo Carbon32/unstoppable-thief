@@ -28,6 +28,10 @@ mixer.init()
 
 # Engine Functions: #
 
+def loadGameSound(path : str):
+	sound = pygame.mixer.Sound(path)
+	return sound
+
 def loadGameImage(path : str, width : int, height : int):
 	image = pygame.image.load(path).convert_alpha()
 	image = pygame.transform.scale(image, (width, height))
@@ -53,6 +57,10 @@ class Game():
 
 		self.gameReady = False
 
+		# Level State:
+
+		self.state = True
+
 		# Editor Status:
 
 		self.editorStatus = False
@@ -60,6 +68,10 @@ class Game():
 		# Level Selector:
 
 		self.levelSelector = True
+
+		# Music:
+
+		self.musicStarted = False
 
 		# Menu Status:
 
@@ -95,19 +107,35 @@ class Game():
 		self.gameReady = True
 		self.changeTime = True
 
+		if(not self.musicStarted):
+			self.sounds.playMusic('sounds/background/background.ogg', 0.06)
+			self.musicStarted = True
+
 	def setGameIcon(self, path : str):
 		icon = pygame.image.load(path)
 		pygame.display.set_icon(icon)
 
-	def startWindow(self):
+	def startWindow(self, sounds):
 		self.display = pygame.display.set_mode((self.screenWidth, self.screenHeight), pygame.FULLSCREEN | pygame.DOUBLEBUF)
 		pygame.display.set_caption("Unstoppable Thief")
 		self.engineGravity = (self.screenWidth // 300) * 0.1
 		self.player = Player(self, self.screenWidth // 10, self.screenHeight - (self.screenHeight // 8), self.screenWidth // 300)
+		self.sounds = sounds
 		self.engineRunning = True
 
 	def updateDisplay(self, fps : int):
 		self.fpsHandler.tick(fps)
+
+		for event in pygame.event.get():
+			if(event.type == pygame.QUIT):
+				self.engineRunning = False
+
+		if(pygame.key.get_pressed()[pygame.K_ESCAPE]):
+			self.engineRunning = False
+
+		pygame.display.update()
+
+	def updateTime(self):
 
 		if(self.changeTime):
 			if(pygame.time.get_ticks() - self.timeUpdate > 1):
@@ -127,15 +155,6 @@ class Game():
 
 			self.timeUpdate = pygame.time.get_ticks()
 
-		for event in pygame.event.get():
-			if(event.type == pygame.QUIT):
-				self.engineRunning = False
-
-		if(pygame.key.get_pressed()[pygame.K_ESCAPE]):
-			self.engineRunning = False
-
-		pygame.display.update()
-
 	def setBackground(self, rgb : tuple):
 		self.display.fill(rgb)
 
@@ -149,24 +168,27 @@ class Game():
 		self.cameraGroup.empty()
 
 	def updateGameSprites(self, world, particles):
+		if(self.state):
 
-		self.player.update(world, particles)
+			self.player.update(world, particles)
 
-		for money in self.moneyGroup:
+			for money in self.moneyGroup:
 
-			money.update()
+				money.update()
 
-		for safe in self.safesGroup:
+			for safe in self.safesGroup:
 
-			safe.update()
+				safe.update()
 
-		for key in self.keysGroup:
+			for key in self.keysGroup:
 
-			key.update()
+				key.update()
 
-		for camera in self.cameraGroup:
+			for camera in self.cameraGroup:
 
-			camera.update()
+				camera.update()
+
+			self.updateTime()
 
 	def drawGameSprites(self, world, ui):
 
@@ -214,8 +236,6 @@ class Player(pygame.sprite.Sprite):
 		self.y = y
 		self.defaultSpeed = speed
 		self.speed = speed
-		self.health = 100
-		self.maxHealth = self.health
 		self.sprint = 500
 		self.maxSprint = self.sprint
 		self.interacting = False
@@ -416,6 +436,8 @@ class Player(pygame.sprite.Sprite):
 
 					self.game.level += 1
 
+				self.game.sounds.playSound('Door', 0.1)
+
 				self.money = 0
 				self.key = False
 				self.game.seconds = [0, 0]
@@ -470,12 +492,6 @@ class Player(pygame.sprite.Sprite):
 
 	def render(self):
 		self.game.display.blit(pygame.transform.flip(self.image, self.flip, False), (self.rect.x - self.xcollision, self.rect.y - self.ycollision))
-
-		# Health Bar:
-
-		pygame.draw.rect(self.game.display, (250, 0, 0), (self.game.screenWidth // 7, (self.game.screenHeight // 4 - self.game.screenHeight // 4.3), (self.rect.w * 3), self.game.screenWidth // 80))
-		pygame.draw.rect(self.game.display, (0, 250, 0), (self.game.screenWidth // 7, (self.game.screenHeight // 4 - self.game.screenHeight // 4.3), (self.rect.w * 3) * (self.health / self.maxHealth), self.game.screenWidth // 80))
-		pygame.draw.rect(self.game.display, (255, 255, 255), (self.game.screenWidth // 7, (self.game.screenHeight // 4 - self.game.screenHeight // 4.3),(self.rect.w * 3), self.game.screenWidth // 80), 2)
 
 		# Sprint Bar:
 
@@ -649,12 +665,57 @@ class Camera(pygame.sprite.Sprite):
 
 		self.tileSize = tileSize
 
-		self.image = self.assetsManager.camera["Camera1"]
+		# Camera Directions:
+
+		self.direction = random.randint(0, 1)
+		self.cameraDirections = [x - (self.tileSize * 5.5), x - (self.tileSize * -1.2)]
+
+		# Camera Settings:
+
+		self.image = self.assetsManager.camera[f"Camera{self.direction}"]
 		self.rect = self.image.get_rect()
 		self.rect.midtop = (x + self.tileSize // 2, y + (self.tileSize - self.image.get_height()))
 
+		# Camera Vision:
+
+		self.cameraVision = pygame.Rect(self.cameraDirections[self.direction], self.rect.y, self.game.screenWidth // 6, self.game.screenHeight // 9)
+
+		# Camera Timer:
+
+		self.cameraTimer = pygame.time.get_ticks()
+		self.cameraChangeDirection = 5000
+		self.barTime = (pygame.time.get_ticks() - self.cameraTimer) / self.cameraChangeDirection
+
 	def draw(self):
 		self.game.display.blit(self.image, self.rect)
+
+		pygame.draw.rect(self.game.display, (100, 144, 44), (self.rect.x, self.rect.bottom - self.rect.h // 5, (self.rect.w), self.game.screenWidth // 256))
+		pygame.draw.rect(self.game.display, (0, 255, 40), (self.rect.x, self.rect.bottom - self.rect.h // 5, (self.rect.w) * (self.barTime), self.game.screenWidth // 256))
+		pygame.draw.rect(self.game.display, (0, 0, 0), (self.rect.x, self.rect.bottom - self.rect.h // 5,(self.rect.w), self.game.screenWidth // 256), 2)
+
+	def update(self):
+
+		if(pygame.time.get_ticks() - self.cameraTimer > self.cameraChangeDirection):
+
+			if(self.direction == 1):
+
+				self.direction = 0
+
+			else:
+
+				self.direction += 1
+
+			self.image = self.assetsManager.camera[f"Camera{self.direction}"]
+			self.cameraVision = pygame.Rect(self.cameraDirections[self.direction], self.rect.y, self.game.screenWidth // 6, self.game.screenHeight // 9)
+			self.cameraTimer = pygame.time.get_ticks()
+
+		if(self.cameraVision.colliderect(self.game.player)):
+
+			self.game.sounds.playSound('Alarm', 0.1)
+			self.game.state = False
+
+		self.barTime = (pygame.time.get_ticks() - self.cameraTimer) / self.cameraChangeDirection
+
 
 # Money: #
 
@@ -696,6 +757,7 @@ class Money(pygame.sprite.Sprite):
 				if(pygame.key.get_pressed()[pygame.K_f]):
 					self.image = self.assetsManager.walls["Upper"]
 					self.game.player.money += 100
+					self.game.sounds.playSound('Money', 0.1)
 					self.status = False
 
 			else:
@@ -747,6 +809,7 @@ class Safe(pygame.sprite.Sprite):
 
 				if(not self.game.player.interacting):
 					if(pygame.key.get_pressed()[pygame.K_f]):
+						self.game.sounds.playSound('Safe', 0.1)
 						self.game.player.interacting = True
 
 			else:
@@ -813,6 +876,7 @@ class Key(pygame.sprite.Sprite):
 				if(pygame.key.get_pressed()[pygame.K_f]):
 					self.image = self.assetsManager.walls["Upper"]
 					self.game.player.key = True
+					self.game.sounds.playSound('Key', 0.1)
 					self.status = False
 
 			else:
@@ -934,9 +998,8 @@ class AssetsManager():
 		# Camera:
 
 		self.camera = {
-			"Camera1" : loadGameImage('assets/Camera/Camera_Left.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
-			"Camera2" : loadGameImage('assets/Camera/Camera_Front.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
-			"Camera3" : loadGameImage('assets/Camera/Camera_Right.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
+			"Camera0" : loadGameImage('assets/Camera/Camera_Left.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
+			"Camera1" : loadGameImage('assets/Camera/Camera_Right.png', self.game.screenWidth // 32, self.game.screenWidth // 32),
 
 		}
 
@@ -1065,6 +1128,52 @@ class Button():
 	def changeButton(self, image : pygame.Surface):
 
 		self.image = image
+
+
+# Sounds: #
+
+class Sounds():
+	def __init__(self):
+
+		# Music:
+
+		self.musicStatus = True
+
+		# Sounds: 
+
+		self.soundStatus = True
+
+		# Available Sounds: 
+
+		self.sounds = {
+			'Footsteps' : loadGameSound('sounds/footsteps/footsteps.ogg'),
+			'Door' : loadGameSound('sounds/door/door.ogg'),
+			'Safe' : loadGameSound('sounds/crack/crack.ogg'),
+			'Money' : loadGameSound('sounds/money/money.ogg'),
+			'Key' : loadGameSound('sounds/key/key.ogg'),
+			'Alarm' : loadGameSound('sounds/alarm/alarm.ogg')
+		}
+
+	def playSound(self, sound : str, volume : float):
+
+		if(self.soundStatus):
+			self.sounds[sound].set_volume(volume)
+			pygame.mixer.Sound.play(self.sounds[sound])
+
+	def stopSound(self, sound : str):
+
+		pygame.mixer.Sound.stop(self.sounds[sound])
+
+	def playMusic(self, music : str, volume : float):
+		if(self.musicStatus):
+			pygame.mixer.music.load(music)
+			pygame.mixer.music.set_volume(volume)
+			pygame.mixer.music.play(-1, 0.0, 5000)
+
+	def stopMusic(self):
+		pygame.mixer.music.stop()
+
+
 
 # Particles: #
 
