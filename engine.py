@@ -119,7 +119,7 @@ class Game():
 		self.display = pygame.display.set_mode((self.screenWidth, self.screenHeight), pygame.FULLSCREEN | pygame.DOUBLEBUF)
 		pygame.display.set_caption("Unstoppable Thief")
 		self.engineGravity = (self.screenWidth // 300) * 0.1
-		self.player = Player(self, self.screenWidth // 10, self.screenHeight - (self.screenHeight // 8), self.screenWidth // 300)
+		self.player = Player(self, 0, 0, 0)
 		self.sounds = sounds
 		self.engineRunning = True
 
@@ -129,9 +129,6 @@ class Game():
 		for event in pygame.event.get():
 			if(event.type == pygame.QUIT):
 				self.engineRunning = False
-
-		if(pygame.key.get_pressed()[pygame.K_ESCAPE]):
-			self.engineRunning = False
 
 		pygame.display.update()
 
@@ -250,10 +247,12 @@ class Player(pygame.sprite.Sprite):
 		self.direction = 1
 		self.moveRight = False
 		self.moveLeft = False
+		self.moving = False
 		self.velocityY = 0
 		self.inAir = False
 		self.jump = False
 		self.sprinting = False
+		self.footstepsPlaying = False
 
 		# Player Animation Variables:
 
@@ -261,6 +260,11 @@ class Player(pygame.sprite.Sprite):
 		self.animationList = []
 		self.index = 0
 		self.action = 0
+
+		# Player Sound:
+
+		self.soundLength = 0
+		self.soundTime = pygame.time.get_ticks()
 
 		# Collision Patches:
 
@@ -307,9 +311,15 @@ class Player(pygame.sprite.Sprite):
 						self.sprint = 0
 						self.sprinting = False
 
+				if(pygame.key.get_pressed()[pygame.K_ESCAPE] and self.game.gameReady):
+
+					self.game.menuOn = True
+					self.game.sounds.stopMusic()
+
 				if(pygame.key.get_pressed()[pygame.K_d]):
 
 					self.moveRight = True
+					self.moving = True
 					self.updateAction(1)
 					if(not self.inAir):
 						
@@ -318,6 +328,7 @@ class Player(pygame.sprite.Sprite):
 				if(pygame.key.get_pressed()[pygame.K_q]):
 
 					self.moveLeft = True
+					self.moving = True
 					self.updateAction(1)
 					if(not self.inAir):
 						
@@ -338,6 +349,7 @@ class Player(pygame.sprite.Sprite):
 
 		if(not pygame.key.get_pressed()[pygame.K_q] and not pygame.key.get_pressed()[pygame.K_d]):
 
+			self.moving = False
 			self.updateAction(0)
 
 		if(not pygame.key.get_pressed()[pygame.K_LSHIFT]):
@@ -353,6 +365,7 @@ class Player(pygame.sprite.Sprite):
 
 		if(self.interacting):
 
+			self.game.sounds.stopSound('Footsteps')
 			self.moveLeft = False
 			self.moveRight = False
 			self.updateAction(3)
@@ -391,7 +404,33 @@ class Player(pygame.sprite.Sprite):
 
 		if(self.inAir):
 
+			self.footstepsPlaying = False
+			self.game.sounds.stopSound('Footsteps')
 			self.updateAction(2)
+
+		if(self.soundLength == round(pygame.mixer.Sound.get_length(self.game.sounds.sounds['Footsteps']))):
+
+			self.game.sounds.stopSound('Footsteps')
+			self.game.sounds.playSound('Footsteps', 0.1)
+			self.soundLength = 0
+
+		if(pygame.time.get_ticks() - self.soundTime > 1000):
+
+			self.soundLength += 1
+			self.soundTime = pygame.time.get_ticks()
+
+		if(self.moving):
+
+			if(not self.footstepsPlaying):
+
+				self.game.sounds.stopSound('Footsteps')
+				self.game.sounds.playSound('Footsteps', 0.1)
+				self.footstepsPlaying = True
+
+		if(not self.moving):
+
+			self.footstepsPlaying = False
+			self.game.sounds.stopSound('Footsteps')
 
 		self.velocityY += self.game.engineGravity
 
@@ -561,6 +600,10 @@ class World():
 
 		self.game.removeAllSprites()
 
+		# Reset Player Position:
+
+		self.game.player = Player(self.game, self.game.screenWidth // 10, self.game.screenHeight - (self.game.screenHeight // 8), self.game.screenWidth // 300)
+
 		# Update Game Level:
 
 		self.game.level = level
@@ -711,11 +754,13 @@ class Camera(pygame.sprite.Sprite):
 
 		if(self.cameraVision.colliderect(self.game.player)):
 
+			self.game.player.moving = False
 			self.game.sounds.playSound('Alarm', 0.1)
+			self.game.sounds.stopSound('Footsteps')
+			self.game.sounds.stopMusic()
 			self.game.state = False
 
 		self.barTime = (pygame.time.get_ticks() - self.cameraTimer) / self.cameraChangeDirection
-
 
 # Money: #
 
@@ -921,9 +966,13 @@ class Menu():
 		# Buttons:
 
 		self.playButton = Button(self.game.display, self.game.screenWidth // 2 - (self.game.screenWidth // 14), self.game.screenHeight // 2 - (self.game.screenHeight // 3), self.assetsManager.buttons["Play"])
+		self.againButton = Button(self.game.display, self.game.screenWidth // 2 - (self.game.screenWidth // 14), self.game.screenHeight // 2 - (self.game.screenHeight // 3), self.assetsManager.buttons["Again"])
 		self.editorButton = Button(self.game.display, self.game.screenWidth // 2 - (self.game.screenWidth // 14), self.game.screenHeight // 2 - (self.game.screenHeight // 6), self.assetsManager.buttons["Editor"])
 		self.exitButton = Button(self.game.display, self.game.screenWidth // 2 - (self.game.screenWidth // 14), self.game.screenHeight // 6 + (self.game.screenHeight // 3), self.assetsManager.buttons["Exit"])
 		self.selectButton = Button(self.game.display, self.game.screenWidth // 4 + (self.game.screenWidth // 4), self.game.screenHeight // 2 + (self.game.screenHeight // 4), self.assetsManager.buttons["Select"])
+		self.musicButton = Button(self.game.display, self.game.screenWidth // 2 + (self.game.screenWidth // 2.3), self.game.screenHeight // 2 - (self.game.screenHeight // 2.1), self.assetsManager.buttons["MusicOn"])
+		self.soundButton = Button(self.game.display, self.game.screenWidth // 2 + (self.game.screenWidth // 2.8), self.game.screenHeight // 2 - (self.game.screenHeight // 2.1), self.assetsManager.buttons["SoundOn"])
+		self.backButton = Button(self.game.display, self.game.screenWidth // 2 - (self.game.screenWidth // 14), self.game.screenHeight // 6 + (self.game.screenHeight // 2), self.assetsManager.buttons["Back"])
 		self.level1 = Button(self.game.display, self.game.screenWidth // 10, self.game.screenHeight // 2 - (self.game.screenWidth // 4), self.assetsManager.buttons["Lvl1"])
 		self.level2 = Button(self.game.display, self.game.screenWidth // 10, self.game.screenHeight // 2 - (self.game.screenWidth // 6), self.assetsManager.buttons["Lvl2"])
 		self.level3 = Button(self.game.display, self.game.screenWidth // 10, self.game.screenHeight // 2 - (self.game.screenWidth // 12), self.assetsManager.buttons["Lvl3"])
@@ -934,11 +983,27 @@ class Menu():
 
 			self.game.setBackground((185, 189, 193))
 
-			if(self.mainMenu):
+			if(self.mainMenu or self.game.gameReady):
+
+				if(self.game.gameReady):
+
+					if(self.backButton.render()):
+
+						self.mainMenu = False
+						self.game.menuOn = False
+						self.game.musicStarted = False
 
 				if(self.playButton.render()):
 
-					self.mainMenu = False
+					if(self.game.gameReady):
+
+						self.mainMenu = False
+						self.game.levelSelector = True
+						self.game.gameReady = False
+
+					else:
+
+						self.mainMenu = False
 
 				if(self.editorButton.render()):
 
@@ -946,7 +1011,34 @@ class Menu():
 					self.game.levelSelector = False
 					self.game.editorStatus = True
 					self.game.menuOn = False
+					self.game.gameReady = False
 					self.mainMenu = False
+
+				if(self.musicButton.render()):
+
+					if(self.game.sounds.musicStatus):
+
+						self.musicButton.changeButton(self.assetsManager.buttons["MusicOff"])
+						self.game.sounds.musicStatus = False
+						self.game.sounds.stopMusic()
+
+					else:
+
+						self.musicButton.changeButton(self.assetsManager.buttons["MusicOn"])
+						self.game.sounds.musicStatus = True
+						self.game.musicStarted = False
+
+				if(self.soundButton.render()):
+
+					if(self.game.sounds.soundStatus):
+
+						self.soundButton.changeButton(self.assetsManager.buttons["SoundOff"])
+						self.game.sounds.soundStatus = False
+
+					else:
+
+						self.soundButton.changeButton(self.assetsManager.buttons["SoundOn"])
+						self.game.sounds.soundStatus = True
 
 				if(self.exitButton.render()):
 
@@ -985,6 +1077,19 @@ class Menu():
 				pygame.draw.rect(self.game.display, (0, 0, 0), pygame.Rect(self.game.screenWidth // 3, self.game.screenHeight // 6, self.game.screenWidth // 2, self.game.screenHeight // 2), self.game.screenWidth // 128)
 				pygame.draw.rect(self.game.display, (150, 255, 0), self.border, self.game.screenWidth // 128)
 
+
+	def checkForArrest(self):
+
+		if(not self.game.state):
+			if(self.againButton.render()):
+				self.game.sounds.stopSound('Alarm')
+				self.game.musicStarted = False
+				self.world.setGameLevel(self.game.level)
+				self.game.player.key = False
+				self.game.player.money = 0
+				self.game.state = True
+				self.game.minutes = [0, 0]
+				self.game.seconds = [0, 0]
 
 # Assets Manager: 
 
@@ -1468,7 +1573,6 @@ class Editor():
 
 			if(pygame.time.get_ticks() - self.changeTimer > 200 and self.game.level < 3):
 
-				print(self.game.level)
 				self.game.level += 1
 				self.unsaved = False
 				self.loadNewLevel()

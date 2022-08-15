@@ -107,6 +107,7 @@ while(game.engineRunning):
 				editor.handleEditor()
 		else:
 
+			menu.checkForArrest()
 			game.drawGameSprites(world, ui)
 			particles.drawParticles()
 			game.updateGameSprites(world, particles)
@@ -116,4 +117,3 @@ while(game.engineRunning):
 				game.startGame()
 
 	game.updateDisplay(60)
-	#print(game.fpsHandler.get_fps())

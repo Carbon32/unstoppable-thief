@@ -1,15 +1,76 @@
-# Unstoppable Thief:
-A 2D Platformer video game, contains 5 levels and a few interesting game mechanics.
+<h1 align="center">Unstoppable Thief:</h1><br>
+
+<details>
+  <summary>Table of Contents:</summary>
+  <ol>
+    <li>
+      <a href="#about">About</a>
+      <ul>
+      </ul>
+    </li>
+    <li>
+      <a href="#installation">Installation</a>
+      <ul>
+      </ul>
+    </li>
+    <li><a href="#contributors">Contributors</a></li>
+    <li><a href="#changelog">Changelog</a></li>
+    <li><a href="#license">License</a></li>
+  </ol>
+</details>
 
 
-**Game Art:**
+## About:
 
-The sprite used for player & enemies: David Harrington (collected from: https://opengameart.org). The sprite has been heavily modified to fit the game.
+<img src = "https://i.imgur.com/trJhIT2.png" width = 960 height = 540>
 
-**Sounds:**
 
-https://www.freesfx.co.uk/ 
+This is a 2D Platformer made in Python and based on Pygame library, the game's engine can handle a few tasks: 
 
-https://mixkit.co
+* Displaying sprites and updating them.
+* Displaying different animations (idle, moving, jumping...).
+* Playing sounds and music.
+* Displaying interactive Buttons that can be linked to different actions.
+* Displaying a User Interface (Sprint bar, Money and other stuff).
+* Displaying interactive cameras and updating them (the camera will change it's direction every few seconds).
+* Displaying particles & different effects (running & jumping).
+* Handling level transitions and level restarts.
+* Editing levels using a custom integrated level editor (levels can be saved and played instantly).
+* Supporting multiple game resolutions.
+* And a few more minor features...
 
-https://www.freesoundslibrary.com
+The code is a mess, i may make some improvements soon enough.
+
+## Installation:
+
+To be able to run Unstoppable Thief, you need to have Pygame installed on your computer.
+
+<b>NOTE:</b> Messing with directories may cause some unforeseen consequences...
+
+1. Clone the repository: 
+
+   ```sh
+   git clone https://github.com/Carbon32/unstoppable-thief.git
+   ```
+2. Install all necessary libraries:
+
+    ```sh
+    pip install pygame
+    ```
+
+## Contributors:
+
+<a href="https://luizmelo.itch.io">LuizMelo (Thief Character)</a><br>
+
+
+## Changelog:
+
+Changes made on: 08/15/2022
+
+* Made some major changes to the game.
+* Updated the documentation.
+
+## License:
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
