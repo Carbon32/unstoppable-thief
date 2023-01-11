@@ -264,6 +264,6 @@ class Player(pygame.sprite.Sprite):
 
         # Sprint Bar:
 
-        pygame.draw.rect(self.game.display, (30,144,255), (self.game.screen_width // 3, (self.game.screen_height // 4 - self.game.screen_height // 4.3), (self.rect.w * 3), self.game.screen_width // 80))
-        pygame.draw.rect(self.game.display, (173,216,230), (self.game.screen_width // 3, (self.game.screen_height // 4 - self.game.screen_height // 4.3), (self.rect.w * 3) * (self.sprint / self.max_sprint), self.game.screen_width // 80))
-        pygame.draw.rect(self.game.display, (255, 255, 255), (self.game.screen_width // 3, (self.game.screen_height // 4 - self.game.screen_height // 4.3),(self.rect.w * 3), self.game.screen_width // 80), 2)
+        pygame.draw.rect(self.game.display, (30,144,255), (self.game.screen_width // 3, (self.game.screen_height // 4 - self.game.screen_height // 5), (self.rect.w * 3), self.game.screen_width // 80))
+        pygame.draw.rect(self.game.display, (173,216,230), (self.game.screen_width // 3, (self.game.screen_height // 4 - self.game.screen_height // 5), (self.rect.w * 3) * (self.sprint / self.max_sprint), self.game.screen_width // 80))
+        pygame.draw.rect(self.game.display, (255, 255, 255), (self.game.screen_width // 3, (self.game.screen_height // 4 - self.game.screen_height // 5),(self.rect.w * 3), self.game.screen_width // 80), 2)

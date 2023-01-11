@@ -47,22 +47,37 @@ class Menu():
 
         # Buttons:
 
-        self.play_button = Button(self.game.display, self.game.screen_width // 2 - (self.game.screen_width // 14), self.game.screen_height // 2 - (self.game.screen_height // 3), self.assets_manager.buttons["Play"])
-        self.again_button = Button(self.game.display, self.game.screen_width // 2 - (self.game.screen_width // 14), self.game.screen_height // 2 - (self.game.screen_height // 3), self.assets_manager.buttons["Again"])
-        self.editor_button = Button(self.game.display, self.game.screen_width // 2 - (self.game.screen_width // 14), self.game.screen_height // 2 - (self.game.screen_height // 6), self.assets_manager.buttons["Editor"])
-        self.exit_button = Button(self.game.display, self.game.screen_width // 2 - (self.game.screen_width // 14), self.game.screen_height // 6 + (self.game.screen_height // 3), self.assets_manager.buttons["Exit"])
-        self.select_button = Button(self.game.display, self.game.screen_width // 4 + (self.game.screen_width // 4), self.game.screen_height // 2 + (self.game.screen_height // 4), self.assets_manager.buttons["Select"])
-        self.music_button = Button(self.game.display, self.game.screen_width // 2 + (self.game.screen_width // 2.3), self.game.screen_height // 2 - (self.game.screen_height // 2.1), self.assets_manager.buttons["MusicOn"])
-        self.sound_button = Button(self.game.display, self.game.screen_width // 2 + (self.game.screen_width // 2.8), self.game.screen_height // 2 - (self.game.screen_height // 2.1), self.assets_manager.buttons["SoundOn"])
-        self.back_button = Button(self.game.display, self.game.screen_width // 2 - (self.game.screen_width // 14), self.game.screen_height // 6 + (self.game.screen_height // 2), self.assets_manager.buttons["Back"])
-        self.level1 = Button(self.game.display, self.game.screen_width // 10, self.game.screen_height // 2 - (self.game.screen_width // 4), self.assets_manager.buttons["Lvl1"])
-        self.level2 = Button(self.game.display, self.game.screen_width // 10, self.game.screen_height // 2 - (self.game.screen_width // 6), self.assets_manager.buttons["Lvl2"])
-        self.level3 = Button(self.game.display, self.game.screen_width // 10, self.game.screen_height // 2 - (self.game.screen_width // 12), self.assets_manager.buttons["Lvl3"])
-        
+        self.play_button = ButtonText(self.game, 'Play', self.game.screen_width // 2 - (self.game.screen_width // 10), self.game.screen_height // 2 - (self.game.screen_height // 6), self.game.screen_width // 4, self.game.screen_width // 12, self.game.screen_width // 80, 'large')
+        self.editor_button = ButtonText(self.game, 'Editor', self.game.screen_width // 2 - (self.game.screen_width // 10), self.game.screen_height // 3 + (self.game.screen_height // 5), self.game.screen_width // 4, self.game.screen_width // 12, self.game.screen_width // 80, 'large')
+        self.exit_button = ButtonText(self.game, 'Exit', self.game.screen_width // 2 - (self.game.screen_width // 10), self.game.screen_height // 3 + (self.game.screen_height // 2.5), self.game.screen_width // 4, self.game.screen_width // 12, self.game.screen_width // 80, 'large')
+        self.again_button = ButtonText(self.game, 'Again', self.game.screen_width // 2 - (self.game.screen_width // 16), self.game.screen_height // 2 - (self.game.screen_height // 4), self.game.screen_width // 6, self.game.screen_width // 12, self.game.screen_width // 80, 'large')
+        self.select_button = ButtonText(self.game, 'Select', self.game.screen_width // 4 + (self.game.screen_width // 4), self.game.screen_height // 2 + (self.game.screen_height // 4), self.game.screen_width // 6, self.game.screen_width // 12, self.game.screen_width // 80, 'large')
+        self.back_button = ButtonText(self.game, 'Back', self.game.screen_width // 2 - (self.game.screen_width // 64),  self.game.screen_height // 2.9 + (self.game.screen_height // 1.8), self.game.screen_width // 14, self.game.screen_width // 20, self.game.screen_width // 256, 'small')
+        self.music_button = ButtonImage(self.game.display, self.assets_manager.buttons["MusicOn"], self.game.screen_width // 2 + (self.game.screen_width // 2.3), self.game.screen_height // 2 - (self.game.screen_height // 2.1), self.game.screen_width // 32, self.game.screen_width // 32, self.game.screen_width // 256, self.game.screen_width // 64)
+        self.sound_button = ButtonImage(self.game.display, self.assets_manager.buttons["SoundOn"], self.game.screen_width // 2 + (self.game.screen_width // 2.8), self.game.screen_height // 2 - (self.game.screen_height // 2.1), self.game.screen_width // 32, self.game.screen_width // 32, self.game.screen_width // 256, self.game.screen_width // 64)
+
+        # Levels: 
+
+        self.levels = {
+            '1' : ButtonText(self.game, 'Level 1', self.game.screen_width // 24, self.game.screen_height // 2 - (self.game.screen_width // 4), self.game.screen_width // 4, self.game.screen_width // 16, self.game.screen_width // 80, 'large'),
+            '2' : ButtonText(self.game, 'Level 2', self.game.screen_width // 24, self.game.screen_height // 2 - (self.game.screen_width // 6), self.game.screen_width // 4, self.game.screen_width // 16, self.game.screen_width // 80, 'large'),
+            '3' : ButtonText(self.game, 'Level 3', self.game.screen_width // 24, self.game.screen_height // 2 - (self.game.screen_width // 12), self.game.screen_width // 4, self.game.screen_width // 16, self.game.screen_width // 80, 'large'),
+        }
+
+        # Title:
+
+        self.step = 0
+        self.title_background_color = (184, 160, 238)
+
     def handle_menu(self):
         if(self.game.menu_on):
             self.game.set_background((185, 189, 193))
             if(self.main_menu or self.game.game_ready):
+                bounce = -1 * math.sin(self.step) * self.game.screen_width // 64
+                pygame.draw.rect(self.game.display, self.title_background_color, pygame.Rect(self.game.screen_width // 3.7, self.game.screen_height // 24 + bounce, self.game.screen_width - (self.game.screen_width // 2), self.game.screen_height // 5), border_radius = self.game.screen_width // 38)
+                pygame.draw.rect(self.game.display, (0, 0, 0), pygame.Rect(self.game.screen_width // 3.7, self.game.screen_height // 24 + bounce, self.game.screen_width - (self.game.screen_width // 2), self.game.screen_height // 5), self.game.screen_width // 128, border_radius = self.game.screen_width // 38)
+                self.game.draw_custom_text(self.game.fonts['large'], 'Unstoppable Thief', (0, 0, 0), self.game.screen_width // 3.2, (0 + self.game.screen_height // 12) + bounce)
+                self.step += 0.05
                 if(self.game.game_ready):
                     if(self.back_button.render()):
                         self.main_menu = False
@@ -106,19 +121,15 @@ class Menu():
                 if(self.exit_button.render()):
                     self.game.engine_running = False
             else:
-
                 if(self.game.level_selector):
-                    if(self.level1.render()):
+                    if(self.levels['1'].render()):
                         self.selected_level = 1
-                        self.border = pygame.Rect(self.game.screen_width // 10, self.game.screen_height // 2 - (self.game.screen_width // 4), self.game.screen_width // 8, self.game.screen_width // 16)
 
-                    if(self.level2.render()):
+                    if(self.levels['2'].render()):
                         self.selected_level = 2
-                        self.border = pygame.Rect(self.game.screen_width // 10, self.game.screen_height // 2 - (self.game.screen_width // 6), self.game.screen_width // 8, self.game.screen_width // 16)
 
-                    if(self.level3.render()):
+                    if(self.levels['3'].render()):
                         self.selected_level = 3
-                        self.border = pygame.Rect(self.game.screen_width // 10, self.game.screen_height // 2 - (self.game.screen_width // 12), self.game.screen_width // 8, self.game.screen_width // 16)
 
                     if(self.select_button.render() and self.selected_level != 0):
                         self.world.set_game_level(self.selected_level)
@@ -130,6 +141,9 @@ class Menu():
                     self.game.display.blit(self.level_designs[0], (self.game.screen_width // 3, self.game.screen_height // 6))
                 else:
                     self.game.display.blit(self.level_designs[self.selected_level], (self.game.screen_width // 3, self.game.screen_height // 6))
+
+                if(self.selected_level != 0):
+                    self.levels[str(self.selected_level)].change_color((120, 212, 100), (71, 187, 100))
 
                 pygame.draw.rect(self.game.display, (0, 0, 0), pygame.Rect(self.game.screen_width // 3, self.game.screen_height // 6, self.game.screen_width // 2, self.game.screen_height // 2), self.game.screen_width // 128)
                 pygame.draw.rect(self.game.display, (150, 255, 0), self.border, self.game.screen_width // 128)
