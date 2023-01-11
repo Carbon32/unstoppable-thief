@@ -22,7 +22,7 @@
 
 ## About:
 
-<img src = "https://i.imgur.com/trJhIT2.png" width = 960 height = 540>
+<img src = "https://i.imgur.com/kfWUdYJ.png" width = 960 height = 540>
 
 
 This is a 2D Platformer made in Python and based on Pygame library, the game's engine can handle a few tasks: 
@@ -39,7 +39,7 @@ This is a 2D Platformer made in Python and based on Pygame library, the game's e
 * Supporting multiple game resolutions.
 * And a few more minor features...
 
-The code is a mess, i may make some improvements soon enough.
+This project is no longer in-development.
 
 ## Installation:
 
@@ -61,14 +61,17 @@ To be able to run Unstoppable Thief, you need to have Pygame installed on your c
 ## Contributors:
 
 <a href="https://luizmelo.itch.io">LuizMelo (Thief Character)</a><br>
+<a href="https://www.dafont.com/happy-4.font">Graphix Line Studio (Font)</a><br>
 
 
 ## Changelog:
 
-Changes made on: 08/15/2022
+Changes made on: 01/11/2023
 
-* Made some major changes to the game.
-* Updated the documentation.
+* Better code
+* Better particles
+* Better user interface & buttons
+* Fixed a few bugs & issues
 
 ## License:
 
