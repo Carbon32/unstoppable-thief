@@ -139,7 +139,7 @@ class Game():
 
             self.time_update = pygame.time.get_ticks()
 
-    def set_background(self, rgb : tuple):
+    def set_background(self, rgb):
         self.display.fill(rgb)
 
     def remove_all_sprites(self):

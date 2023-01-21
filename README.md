@@ -66,12 +66,10 @@ To be able to run Unstoppable Thief, you need to have Pygame installed on your c
 
 ## Changelog:
 
-Changes made on: 01/11/2023
+Changes made on: 01/22/2023
 
-* Better code
-* Better particles
-* Better user interface & buttons
-* Fixed a few bugs & issues
+* Removed some unused code parts
+* Changed background color
 
 ## License:
 

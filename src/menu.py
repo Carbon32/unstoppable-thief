@@ -71,12 +71,12 @@ class Menu():
 
     def handle_menu(self):
         if(self.game.menu_on):
-            self.game.set_background((185, 189, 193))
+            self.game.set_background((40, 42, 53))
             if(self.main_menu or self.game.game_ready):
                 bounce = -1 * math.sin(self.step) * self.game.screen_width // 64
                 pygame.draw.rect(self.game.display, self.title_background_color, pygame.Rect(self.game.screen_width // 3.7, self.game.screen_height // 24 + bounce, self.game.screen_width - (self.game.screen_width // 2), self.game.screen_height // 5), border_radius = self.game.screen_width // 38)
                 pygame.draw.rect(self.game.display, (0, 0, 0), pygame.Rect(self.game.screen_width // 3.7, self.game.screen_height // 24 + bounce, self.game.screen_width - (self.game.screen_width // 2), self.game.screen_height // 5), self.game.screen_width // 128, border_radius = self.game.screen_width // 38)
-                self.game.draw_custom_text(self.game.fonts['large'], 'Unstoppable Thief', (0, 0, 0), self.game.screen_width // 3.2, (0 + self.game.screen_height // 12) + bounce)
+                self.game.draw_custom_text(self.game.fonts['large'], 'Unstoppable Thief', (0, 0, 0), self.game.screen_width // 3.2, (0 + self.game.screen_height // 10) + bounce)
                 self.step += 0.05
                 if(self.game.game_ready):
                     if(self.back_button.render()):
