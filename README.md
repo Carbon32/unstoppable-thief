@@ -22,7 +22,7 @@
 
 ## About:
 
-<img src = "https://i.imgur.com/kfWUdYJ.png" width = 960 height = 540>
+<img src = "https://i.imgur.com/kfWUdYJ.png" width = 100% height = 100%>
 
 
 This is a 2D Platformer made in Python and based on Pygame library, the game's engine can handle a few tasks: 
@@ -66,10 +66,9 @@ To be able to run Unstoppable Thief, you need to have Pygame installed on your c
 
 ## Changelog:
 
-Changes made on: 01/22/2023
+Changes made on: 02/05/2023
 
-* Removed some unused code parts
-* Changed background color
+* Better documentation
 
 ## License:
 
