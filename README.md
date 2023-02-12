@@ -39,7 +39,7 @@ This is a 2D Platformer made in Python and based on Pygame library, the game's e
 * Supporting multiple game resolutions.
 * And a few more minor features...
 
-This project is no longer in-development.
+This project is no longer in-development. But that doesn't mean it won't receive some updates. 
 
 ## Installation:
 
@@ -66,7 +66,7 @@ To be able to run Unstoppable Thief, you need to have Pygame installed on your c
 
 ## Changelog:
 
-Changes made on: 02/05/2023
+Changes made on: 02/12/2023
 
 * Better documentation
 
